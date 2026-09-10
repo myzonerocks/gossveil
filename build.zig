@@ -94,12 +94,21 @@ pub fn build(b: *std.Build) void {
         .name = "gossveil-example",
         .root_module = b.createModule(.{ .target = target, .optimize = optimize, .link_libc = true }),
     });
-    c_example.root_module.addCSourceFile(.{ .file = b.path("examples/c/main.c"), .flags = c_flags });
+    c_example.root_module.addCSourceFile(.{ .file = b.path("sdk/c/example/main.c"), .flags = c_flags });
     c_example.root_module.addIncludePath(b.path("include"));
     c_example.root_module.linkLibrary(abi_static);
     const run_c_example = b.addRunArtifact(c_example);
     run_c_example.expectStdOutEqual("ok\n");
     b.step("c-example", "Build and run the C example against the static library").dependOn(&run_c_example.step);
+
+    // The C SDK, staged under zig-out/c: the header beside the two libraries a
+    // host links, named so a program asks for -lgossveil and nothing else.
+    const c_step = b.step("c", "Stage the C SDK: the header, the shared library and the static archive");
+    const c_shared = b.addLibrary(.{ .name = "gossveil", .root_module = rootFor(b, "abi/gossveil.zig", target, optimize, false), .linkage = .dynamic });
+    const c_static = b.addLibrary(.{ .name = "gossveil", .root_module = rootFor(b, "abi/gossveil.zig", target, optimize, false), .linkage = .static });
+    c_step.dependOn(installInto(b, c_shared, "c/lib"));
+    c_step.dependOn(installInto(b, c_static, "c/lib"));
+    c_step.dependOn(&b.addInstallFileWithDir(b.path("include/gossveil.h"), .{ .custom = "c/include" }, "gossveil.h").step);
 
     const apple_step = b.step("apple", "Build the iOS device, iOS simulator and macOS static libraries");
     const apple_slices = [_]struct { dir: []const u8, query: std.Target.Query }{

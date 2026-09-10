@@ -5,6 +5,9 @@ A release moves that section under its tag with the date, and the release notes 
 
 ## Unreleased
 
+- The C ABI ships as a package of its own: `zig build c` stages the header beside a shared
+  library and a static archive, with a guide, a CMake import and the example beside them.
+
 - Each package carries its own guide: install, the store contract, a session end to end,
   groups, sealed envelopes and safety numbers, in that package's own language.
 
