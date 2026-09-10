@@ -22,6 +22,22 @@ pub const keys = struct {
     pub const mac = @import("keys/mac.zig");
 };
 
+pub const bundle = struct {
+    pub const records = @import("bundle/records.zig");
+    pub const Published = @import("bundle/published.zig").Published;
+};
+
+pub const ratchet = struct {
+    pub const chain = @import("ratchet/chain.zig");
+    pub const state = @import("ratchet/state.zig");
+    pub const State = state.State;
+    pub const Archive = @import("ratchet/archive.zig").Archive;
+};
+
+pub const handshake = struct {
+    pub const agree = @import("handshake/agree.zig");
+};
+
 pub const ident = struct {
     pub const Uuid = @import("ident/uuid.zig").Uuid;
     pub const service = @import("ident/service.zig");
@@ -34,4 +50,7 @@ test {
     std.testing.refAllDecls(wire);
     std.testing.refAllDecls(keys);
     std.testing.refAllDecls(ident);
+    std.testing.refAllDecls(bundle);
+    std.testing.refAllDecls(ratchet);
+    std.testing.refAllDecls(handshake);
 }
