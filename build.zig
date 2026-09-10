@@ -30,6 +30,41 @@ fn named(value: ?[]const u8) ?[]const u8 {
     return if (text.len == 0) null else text;
 }
 
+/// macOS keeps the JDK behind a tool rather than in the environment, so ask it.
+fn systemJavaHome(b: *std.Build) ?[]const u8 {
+    if (builtin.os.tag != .macos) return null;
+    var code: u8 = 0;
+    const out = b.runAllowFail(&.{"/usr/libexec/java_home"}, &code, .ignore) catch return null;
+    const found = std.mem.trim(u8, out, " \t\r\n");
+    return if (found.len == 0) null else b.dupe(found);
+}
+
+/// The newest NDK the installed SDK carries; the side-by-side layout sorts by version.
+fn newestNdk(b: *std.Build) ?[]const u8 {
+    const sdk = named(b.graph.environ_map.get("ANDROID_HOME")) orelse
+        named(b.graph.environ_map.get("ANDROID_SDK_ROOT")) orelse
+        defaultSdkRoot(b) orelse return null;
+    const root = b.pathJoin(&.{ sdk, "ndk" });
+    var dir = std.Io.Dir.cwd().openDir(b.graph.io, root, .{ .iterate = true }) catch return null;
+    defer dir.close(b.graph.io);
+    var newest: ?[]const u8 = null;
+    var it = dir.iterate();
+    while (it.next(b.graph.io) catch return null) |entry| {
+        if (entry.kind != .directory) continue;
+        if (newest == null or std.mem.order(u8, entry.name, newest.?) == .gt) newest = b.dupe(entry.name);
+    }
+    return if (newest) |name| b.pathJoin(&.{ root, name }) else null;
+}
+
+fn defaultSdkRoot(b: *std.Build) ?[]const u8 {
+    const home = named(b.graph.environ_map.get("HOME")) orelse return null;
+    return switch (builtin.os.tag) {
+        .macos => b.pathJoin(&.{ home, "Library", "Android", "sdk" }),
+        .linux => b.pathJoin(&.{ home, "Android", "Sdk" }),
+        else => null,
+    };
+}
+
 fn installInto(b: *std.Build, artifact: *std.Build.Step.Compile, dir: []const u8) *std.Build.Step {
     return &b.addInstallArtifact(artifact, .{ .dest_dir = .{ .override = .{ .custom = dir } } }).step;
 }
@@ -87,8 +122,8 @@ pub fn build(b: *std.Build) void {
     wasm.root_module.strip = true;
     b.step("wasm", "Build the wasm32 core for the web package").dependOn(installInto(b, wasm, "wasm"));
 
-    const java_home = named(b.option([]const u8, "java-home", "JDK root holding include/jni.h (default: $JAVA_HOME)") orelse
-        b.graph.environ_map.get("JAVA_HOME"));
+    const java_home = named(b.option([]const u8, "java-home", "JDK root holding include/jni.h (default: $JAVA_HOME, else the system JDK)")) orelse
+        named(b.graph.environ_map.get("JAVA_HOME")) orelse systemJavaHome(b);
     const jni_step = b.step("jni", "Build the JNI shared library for the host JVM");
     if (java_home) |root| {
         const jni = b.addLibrary(.{ .name = "gossveil_jni", .root_module = rootFor(b, "abi/jni.zig", target, optimize, true), .linkage = .dynamic });
@@ -105,8 +140,8 @@ pub fn build(b: *std.Build) void {
         jni_step.dependOn(&b.addFail("the jni step needs -Djava-home=<jdk> or JAVA_HOME").step);
     }
 
-    const ndk = named(b.option([]const u8, "ndk", "Android NDK root (default: $ANDROID_NDK_HOME)") orelse
-        b.graph.environ_map.get("ANDROID_NDK_HOME"));
+    const ndk = named(b.option([]const u8, "ndk", "Android NDK root (default: $ANDROID_NDK_HOME, else the newest under the SDK)")) orelse
+        named(b.graph.environ_map.get("ANDROID_NDK_HOME")) orelse newestNdk(b);
     const android_step = b.step("android", "Build the JNI shared library for arm64-v8a and x86_64");
     if (ndk) |root| {
         const host_tag = switch (builtin.os.tag) {
