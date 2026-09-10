@@ -185,8 +185,19 @@ const Gate = struct {
         return list.items;
     }
 
+    /// A range is one argument here and several to git: the first push of a branch asks for
+    /// "<sha> --not --remotes=origin", which git reads as one ambiguous revision unless it is
+    /// split back into the words it was written as.
+    fn rangeArgv(g: *Gate, head: []const []const u8, range: []const u8) ![]const []const u8 {
+        var argv: std.ArrayList([]const u8) = .empty;
+        try argv.appendSlice(g.arena, head);
+        var words = std.mem.tokenizeAny(u8, range, " \t");
+        while (words.next()) |word| try argv.append(g.arena, word);
+        return argv.items;
+    }
+
     fn checkLogRange(g: *Gate, range: []const u8) !void {
-        const out = try g.git(&.{ "git", "log", "--format=%H%x1f%B%x00", range });
+        const out = try g.git(try g.rangeArgv(&.{ "git", "log", "--format=%H%x1f%B%x00" }, range));
         var it = std.mem.splitScalar(u8, out, 0);
         while (it.next()) |entry| {
             if (entry.len == 0) continue;
@@ -197,7 +208,7 @@ const Gate = struct {
     }
 
     fn checkDiffRange(g: *Gate, range: []const u8) !void {
-        const out = try g.git(&.{ "git", "diff", "--diff-filter=ACMR", "-U0", range });
+        const out = try g.git(try g.rangeArgv(&.{ "git", "diff", "--diff-filter=ACMR", "-U0" }, range));
         var path: []const u8 = "";
         var run: usize = 0;
         var shipped: ?[]const u8 = null;
