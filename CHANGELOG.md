@@ -5,7 +5,8 @@ A release moves that section under its tag with the date, and the release notes 
 
 ## Unreleased
 
-## v0.1.0-alpha.2 (2026-09-10)
+- A local publish of the Android package names the released version, so a sibling checkout and a
+  client that asks for it agree on the coordinate.
 
 ## v0.1.0-alpha.2 (2026-09-10)
 
