@@ -21,6 +21,13 @@ fi
 
 tag="${1:?usage: changelog-cut.sh --show | <tag> [date]}"
 date="${2:-$(date -u +%Y-%m-%d)}"
+
+# A release rebuilt for the same version has already been cut; print what it cut then.
+if grep -q "^## ${tag} (" "$file"; then
+  section "$(grep -m1 "^## ${tag} (" "$file")"
+  exit 0
+fi
+
 awk -v tag="$tag" -v date="$date" '
   /^## Unreleased/ && !seen { print; print ""; print "## " tag " (" date ")"; seen = 1; next }
   { print }
