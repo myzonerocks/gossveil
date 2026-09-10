@@ -5,6 +5,9 @@ A release moves that section under its tag with the date, and the release notes 
 
 ## Unreleased
 
+- Each package carries its own guide: install, the store contract, a session end to end,
+  groups, sealed envelopes and safety numbers, in that package's own language.
+
 - The web package names its repository, which the registry's provenance check requires before
   it will accept a signed publish.
 
