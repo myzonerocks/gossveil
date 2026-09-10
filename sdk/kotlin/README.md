@@ -28,6 +28,20 @@ core itself on first use, so there is no `System.loadLibrary` to call and no ABI
 configure. Every published version is on the
 [releases page](https://github.com/myzonerocks/gossveil/releases).
 
+### JitPack
+
+Any tag also builds over JitPack, which takes the native libraries from that tag's release and
+assembles the AAR around them. Central is the recommended route; this one is here for a tag that
+was never published, or a fork:
+
+```kotlin
+// settings.gradle.kts
+repositories { maven { url = uri("https://jitpack.io") } }
+
+// build.gradle.kts
+implementation("com.github.myzonerocks:gossveil:v0.1.0-alpha.2")
+```
+
 ### Building from source
 
 The native core is built by the repository's own toolchain, and Gradle picks it up from
