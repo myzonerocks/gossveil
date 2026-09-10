@@ -8,11 +8,11 @@ core.**
 
 [![gates](https://github.com/myzonerocks/gossveil/actions/workflows/gates.yml/badge.svg)](https://github.com/myzonerocks/gossveil/actions/workflows/gates.yml)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE.md)
-[![platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20Web-informational.svg)](#install)
+[![platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20Web-informational.svg)](#sdks)
 
 [Install](#install) &nbsp;&middot;&nbsp;
 [What you get](#what-you-get) &nbsp;&middot;&nbsp;
-[Use](#use) &nbsp;&middot;&nbsp;
+[SDKs](#sdks) &nbsp;&middot;&nbsp;
 [Documentation](#documentation) &nbsp;&middot;&nbsp;
 [Provenance](PROVENANCE.md) &nbsp;&middot;&nbsp;
 [Contributing](CONTRIBUTING.md)
@@ -20,13 +20,7 @@ core.**
 </div>
 
 One core in Zig with no runtime dependencies, a C ABI over it, and three thin packages: Swift,
-Kotlin and TypeScript over a WebAssembly build.
-
-Protocol-defined wire behaviour is kept consistent across every supported platform. Key
-encodings, record layouts, message framing and key schedules are checked against frozen wire
-vectors recorded by this project's own tooling and replayed on every build. A session started
-with Gossveil on one platform can continue on another without changing the cryptographic core or
-wire representation.
+Kotlin and TypeScript over a WebAssembly build. Storage stays in your app, in your language.
 
 ## Install
 
@@ -52,6 +46,9 @@ implementation("io.github.avosa:gossveil:0.1.0-alpha.2")
 bun add @myzonerocks/gossveil@0.1.0-alpha.2
 ```
 
+Then write the first session with the guide for your platform:
+[iOS](sdk/swift/README.md), [Android](sdk/kotlin/README.md), [Web](sdk/ts/README.md).
+
 ## What you get
 
 | Area | What is in the box |
@@ -66,91 +63,24 @@ bun add @myzonerocks/gossveil@0.1.0-alpha.2
 | Account keys | Entropy pool, backup key, backup id, media ids and media keys |
 | Primitives | HKDF, AES-256-GCM-SIV, chunked MACs, random bytes, content framing |
 
-## Use
+## SDKs
 
-Stores live in your app, in your language. Every operation loads what it needs, calls the core
-with records, and hands records back.
+| SDK | For | Package | Guide |
+|---|---|---|---|
+| **Swift** | iOS, macOS | SwiftPM, a checksummed XCFramework | [sdk/swift](sdk/swift/README.md) |
+| **Kotlin** | Android | Maven Central `io.github.avosa:gossveil` | [sdk/kotlin](sdk/kotlin/README.md) |
+| **TypeScript** | Browser, Node | npm `@myzonerocks/gossveil` | [sdk/ts](sdk/ts/README.md) |
+| **C** | any language with a C FFI | `include/gossveil.h`, static and shared | [docs/API.md](docs/API.md#the-c-abi) |
 
-**Swift**
+The three packages are thin wrappers over the same C ABI and share one operation contract, so the
+same concept carries the same name everywhere and a record written by one opens in another.
 
-```swift
-import Gossveil
+## One wire, every platform
 
-try processPreKeyBundle(
-    bundle,
-    for: peer,
-    ourAddress: me,
-    sessionStore: store,
-    identityStore: store,
-    context: NullContext()
-)
-
-let sealed = try sessionEncrypt(
-    message: plaintext,
-    for: peer,
-    localAddress: me,
-    sessionStore: store,
-    identityStore: store,
-    context: NullContext()
-)
-```
-
-**Kotlin**
-
-```kotlin
-import com.gossveil.*
-
-SessionBuilder(
-    store,
-    store,
-    store,
-    store,
-    peer
-).process(bundle)
-
-val message = SessionCipher(
-    store,
-    store,
-    store,
-    store,
-    store,
-    peer
-).encrypt(plaintext)
-```
-
-**TypeScript**
-
-```ts
-import init, { init as ready, encryptMessage } from '@myzonerocks/gossveil'
-
-await init()
-ready()
-
-const ct = await encryptMessage(
-  plaintext,
-  peer,
-  me,
-  sessions,
-  identities
-)
-```
-
-The full surface per language is in [docs/API.md](docs/API.md); how the layers fit is in
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md); the design the implementation follows is in
-[docs/DESIGN.md](docs/DESIGN.md).
-
-## Build from source
-
-Requires the pinned Zig, installed by `tools/toolchain-sync` into `.local/zig`.
-
-```sh
-tools/toolchain-sync
-zig build ci                                  # unit tests, the frozen vectors, the C example, the source gate
-zig build conformance                         # replay the frozen wire vectors
-tools/build-xcframework.sh && swift test      # the Swift package
-zig build wasm -Doptimize=ReleaseFast && (cd sdk/ts && bun run build && bun test)
-zig build jni android -Doptimize=ReleaseFast && (cd sdk/kotlin && ./gradlew :lib:testDebugUnitTest :lib:assembleRelease)
-```
+Key encodings, record layouts, message framing and key schedules are checked against frozen wire
+vectors recorded by this project's own tooling and replayed on every build. A session started with
+Gossveil on one platform can continue on another without changing the cryptographic core or the
+wire representation.
 
 ## Not included
 
@@ -160,13 +90,14 @@ application and its own backend.
 
 ## Documentation
 
-- [API](docs/API.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Design](docs/DESIGN.md)
+- [Swift SDK](sdk/swift/README.md), [Kotlin SDK](sdk/kotlin/README.md), [TypeScript SDK](sdk/ts/README.md)
+- [API](docs/API.md), the surface each package exposes, name for name
+- [Architecture](docs/ARCHITECTURE.md), how the layers fit
+- [Design](docs/DESIGN.md), the design the implementation follows
+- [Changelog](CHANGELOG.md)
+- [Contributing](CONTRIBUTING.md), which is also how to build from source
 - [Provenance](PROVENANCE.md)
-- [Contributing](CONTRIBUTING.md)
-- [License](LICENSE.md)
-- [Third-party notices](NOTICE.md)
+- [License](LICENSE.md), [Third-party notices](NOTICE.md)
 
 ## License
 
