@@ -94,7 +94,7 @@ Errors: `GossveilError` (Swift enum), the typed exceptions in the Kotlin package
 
 ## The C ABI
 
-`include/gossveil.h`. Every function returns `int32_t` (`GV_OK` is 0); byte inputs are
+`include/gossveil.h`, with its own guide in [sdk/c](../sdk/c/README.md). Every function returns `int32_t` (`GV_OK` is 0); byte inputs are
 `(const uint8_t *, size_t)`; outputs are `GvBuffer` cells freed with `gv_free`; every output
 is empty on error. `gv_alloc` gives a host input memory when it cannot pass a pointer of its
 own. `gv_status_text` names a status.

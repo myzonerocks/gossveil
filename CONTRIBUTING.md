@@ -56,7 +56,7 @@ build.zig  build.zig.zon    one build for every target
 core/                       the protocol core, one directory per area
 abi/                        the C ABI, the wasm root, the JNI entry
 include/gossveil.h          the C header
-sdk/                        swift, kotlin, ts
+sdk/                        swift, kotlin, ts, c
 conformance/                the conformance command and the frozen vectors
 tools/                      toolchain bootstrap, the source gate, release scripts
 ```

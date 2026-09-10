@@ -70,7 +70,7 @@ Then write the first session with the guide for your platform:
 | **Swift** | iOS, macOS | SwiftPM, a checksummed XCFramework | [sdk/swift](sdk/swift/README.md) |
 | **Kotlin** | Android | Maven Central `io.github.avosa:gossveil` | [sdk/kotlin](sdk/kotlin/README.md) |
 | **TypeScript** | Browser, Node | npm `@myzonerocks/gossveil` | [sdk/ts](sdk/ts/README.md) |
-| **C** | any language with a C FFI | `include/gossveil.h`, static and shared | [docs/API.md](docs/API.md#the-c-abi) |
+| **C** | any language with a C FFI | `zig build c`, a header, static and shared | [sdk/c](sdk/c/README.md) |
 
 The three packages are thin wrappers over the same C ABI and share one operation contract, so the
 same concept carries the same name everywhere and a record written by one opens in another.
@@ -90,7 +90,7 @@ application and its own backend.
 
 ## Documentation
 
-- [Swift SDK](sdk/swift/README.md), [Kotlin SDK](sdk/kotlin/README.md), [TypeScript SDK](sdk/ts/README.md)
+- [Swift SDK](sdk/swift/README.md), [Kotlin SDK](sdk/kotlin/README.md), [TypeScript SDK](sdk/ts/README.md), [C SDK](sdk/c/README.md)
 - [API](docs/API.md), the surface each package exposes, name for name
 - [Architecture](docs/ARCHITECTURE.md), how the layers fit
 - [Design](docs/DESIGN.md), the design the implementation follows
