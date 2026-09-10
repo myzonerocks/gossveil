@@ -5,6 +5,9 @@ A release moves that section under its tag with the date, and the release notes 
 
 ## Unreleased
 
+- The Apple framework names its executable in its property list, so a device installs it; a
+  simulator never checked, so only a phone could catch this.
+
 ## v0.1.0-alpha.1 (2026-09-10)
 
 - The core protocol: keys, published records, the ratchet with its post-quantum braid, circles,
