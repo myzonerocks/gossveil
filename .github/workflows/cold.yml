@@ -63,9 +63,9 @@ jobs:
           tools/toolchain-sync
           echo "$PWD/.local/zig/current" >> "$GITHUB_PATH"
       - name: android libraries
-        run: zig build android -Doptimize=ReleaseFast
-        env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
+        run: |
+          export ANDROID_NDK_HOME="${ANDROID_NDK_HOME:-$ANDROID_NDK_LATEST_HOME}"
+          zig build android -Doptimize=ReleaseFast
 
   web:
     runs-on: ubuntu-latest

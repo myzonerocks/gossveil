@@ -23,6 +23,13 @@ fn rootFor(b: *std.Build, source: []const u8, target: std.Build.ResolvedTarget, 
     return m;
 }
 
+/// An empty environment variable names nothing; a relative include path from one is worse
+/// than a clear failure.
+fn named(value: ?[]const u8) ?[]const u8 {
+    const text = value orelse return null;
+    return if (text.len == 0) null else text;
+}
+
 fn installInto(b: *std.Build, artifact: *std.Build.Step.Compile, dir: []const u8) *std.Build.Step {
     return &b.addInstallArtifact(artifact, .{ .dest_dir = .{ .override = .{ .custom = dir } } }).step;
 }
@@ -80,8 +87,8 @@ pub fn build(b: *std.Build) void {
     wasm.root_module.strip = true;
     b.step("wasm", "Build the wasm32 core for the web package").dependOn(installInto(b, wasm, "wasm"));
 
-    const java_home = b.option([]const u8, "java-home", "JDK root holding include/jni.h (default: $JAVA_HOME)") orelse
-        b.graph.environ_map.get("JAVA_HOME");
+    const java_home = named(b.option([]const u8, "java-home", "JDK root holding include/jni.h (default: $JAVA_HOME)") orelse
+        b.graph.environ_map.get("JAVA_HOME"));
     const jni_step = b.step("jni", "Build the JNI shared library for the host JVM");
     if (java_home) |root| {
         const jni = b.addLibrary(.{ .name = "gossveil_jni", .root_module = rootFor(b, "abi/jni.zig", target, optimize, true), .linkage = .dynamic });
@@ -98,8 +105,8 @@ pub fn build(b: *std.Build) void {
         jni_step.dependOn(&b.addFail("the jni step needs -Djava-home=<jdk> or JAVA_HOME").step);
     }
 
-    const ndk = b.option([]const u8, "ndk", "Android NDK root (default: $ANDROID_NDK_HOME)") orelse
-        b.graph.environ_map.get("ANDROID_NDK_HOME");
+    const ndk = named(b.option([]const u8, "ndk", "Android NDK root (default: $ANDROID_NDK_HOME)") orelse
+        b.graph.environ_map.get("ANDROID_NDK_HOME"));
     const android_step = b.step("android", "Build the JNI shared library for arm64-v8a and x86_64");
     if (ndk) |root| {
         const host_tag = switch (builtin.os.tag) {

@@ -28,37 +28,6 @@ vectors recorded by this project's own tooling and replayed on every build. A se
 with Gossveil on one platform can continue on another without changing the cryptographic core or
 wire representation.
 
-## Protocol provenance
-
-Gossveil is an independent implementation of publicly specified secure-messaging protocols and
-cryptographic standards.
-
-Some protocol behaviour implemented by Gossveil is defined by publicly available protocol
-specifications published by Signal. Gossveil is not a fork, port, translation, modification or
-derivative distribution of libsignal or any other protocol implementation. No source code from
-those implementations is incorporated into this project.
-
-The architecture, implementation, tests, documentation and build tooling are independently
-authored for this project or contributed under the Apache License, Version 2.0.
-
-Where implementations of the same protocol must agree, they agree on protocol-defined behaviour:
-key encodings, record layouts, message framing, key schedules and other interoperability
-requirements fixed by the relevant specifications. Gossveil's module layout, types, functions,
-comments, tests and internal architecture are this project's own expression.
-
-Gossveil is an independent project and is not affiliated with, sponsored by or endorsed by
-Signal.
-
-For the complete provenance statement, see [PROVENANCE.md](PROVENANCE.md).
-
-For the public API surface, see [docs/API.md](docs/API.md).
-
-For how the core, C ABI and platform packages fit together, see
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-
-For the design followed by the implementation, see
-[docs/DESIGN.md](docs/DESIGN.md).
-
 ## Install
 
 iOS and Android carry the compiled core inside the package, an XCFramework and a `.so`, so you
