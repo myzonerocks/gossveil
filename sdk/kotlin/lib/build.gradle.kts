@@ -69,7 +69,8 @@ publishing {
 
 mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
-    if (project.findProperty("signingInMemoryKey") != null) {
+    val signingKey = project.findProperty("signingInMemoryKey") as String?
+    if (!signingKey.isNullOrBlank()) {
         signAllPublications()
     }
     coordinates("io.github.avosa", "gossveil", project.property("VERSION_NAME").toString())
