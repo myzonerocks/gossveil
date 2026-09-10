@@ -5,6 +5,9 @@ A release moves that section under its tag with the date, and the release notes 
 
 ## Unreleased
 
+- The web package names its repository, which the registry's provenance check requires before
+  it will accept a signed publish.
+
 - A local publish of the Android package names the released version, so a sibling checkout and a
   client that asks for it agree on the coordinate.
 - The Android and JNI lanes find the JDK and the SDK where a machine keeps them, so the

@@ -3,6 +3,19 @@
   "version": "0.1.0-alpha.1",
   "description": "Sessions, groups, sealed envelopes and safety numbers for the browser and Node, over a wasm core",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/myzonerocks/gossveil.git",
+    "directory": "sdk/ts"
+  },
+  "homepage": "https://github.com/myzonerocks/gossveil",
+  "keywords": [
+    "encryption",
+    "end-to-end",
+    "messaging",
+    "post-quantum",
+    "webassembly"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
