@@ -219,7 +219,7 @@ jobs:
     needs: publish
     if: ${{ needs.publish.outputs.maven == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
       RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', inputs.version) }}
     steps:
@@ -243,17 +243,31 @@ jobs:
         run: |
           set -euo pipefail
           version="${RELEASE_TAG#v}"
+          auth=$(printf '%s:%s' "${ORG_GRADLE_PROJECT_mavenCentralUsername}" "${ORG_GRADLE_PROJECT_mavenCentralPassword}" | base64 -w0)
+          carries() {
+            curl -s -H "Authorization: Bearer ${auth}" \
+              "https://central.sonatype.com/api/v1/publisher/published?namespace=io.github.avosa&name=gossveil&version=${version}" \
+              | tr -d ' \n'
+          }
           # The same rule as npm: a version Central already carries is not published again.
-          published=$(curl -s -H "Authorization: Bearer $(printf '%s:%s' "${ORG_GRADLE_PROJECT_mavenCentralUsername}" "${ORG_GRADLE_PROJECT_mavenCentralPassword}" | base64 -w0)" \
-            "https://central.sonatype.com/api/v1/publisher/published?namespace=io.github.avosa&name=gossveil&version=${version}" | tr -d ' \n')
-          if [ "${published}" = '{"published":true}' ]; then
+          if [ "$(carries)" = '{"published":true}' ]; then
             echo "central already carries ${version}"
             exit 0
           fi
           mkdir -p zig-out/android
           unzip -o dist/android/gossveil-android-jniLibs.zip -d zig-out/android
-          cd sdk/kotlin
-          ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache -PVERSION_NAME="${version}"
+          (cd sdk/kotlin && ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache -PVERSION_NAME="${version}")
+          # The upload returns before the portal has validated it, so a green job proved nothing
+          # about the version being readable. Wait for the portal to say it carries the version.
+          for _ in $(seq 1 40); do
+            if [ "$(carries)" = '{"published":true}' ]; then
+              echo "central carries ${version}"
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "central did not publish ${version} within 20 minutes; check the portal for a rejected deployment"
+          exit 1
   npm:
     needs: publish
     if: ${{ needs.publish.outputs.npm == 'true' }}
