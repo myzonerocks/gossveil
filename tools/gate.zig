@@ -200,11 +200,15 @@ const Gate = struct {
         const out = try g.git(&.{ "git", "diff", "--diff-filter=ACMR", "-U0", range });
         var path: []const u8 = "";
         var run: usize = 0;
+        var shipped: ?[]const u8 = null;
+        var logged = false;
         var it = lines(out);
         while (it.next()) |line| {
             if (std.mem.startsWith(u8, line, "+++ b/")) {
                 path = line[6..];
                 run = 0;
+                if (shipped == null and shipsToUsers(path)) shipped = path;
+                if (std.mem.eql(u8, path, changelog_path)) logged = true;
                 continue;
             }
             if (line.len > 0 and line[0] == '+' and !std.mem.startsWith(u8, line, "+++")) {
@@ -218,6 +222,7 @@ const Gate = struct {
             }
             run = 0;
         }
+        if (shipped) |first| if (!logged) try g.flag("changelog: '{s}' changes what ships without a line under Unreleased in {s}", .{ first, changelog_path });
     }
 
     // A pull request body says what changed and the one thing a reader would not
@@ -233,6 +238,23 @@ const Gate = struct {
         if (std.mem.trim(u8, text, " \t\r\n").len == 0) try g.flag("pr-body: the body is empty", .{});
     }
 };
+
+const changelog_path = "CHANGELOG.md";
+const shipped_roots = [_][]const u8{ "core/", "abi/", "include/", "sdk/", "conformance/vectors/" };
+
+/// Whether a change to this path reaches a user of the library.
+fn shipsToUsers(path: []const u8) bool {
+    for (shipped_roots) |root| if (std.mem.startsWith(u8, path, root)) return true;
+    return false;
+}
+
+test "only shipped paths ask for a changelog line" {
+    try std.testing.expect(shipsToUsers("core/keys/curve.zig"));
+    try std.testing.expect(shipsToUsers("sdk/ts/src/api.ts"));
+    try std.testing.expect(!shipsToUsers("docs/DESIGN.md"));
+    try std.testing.expect(!shipsToUsers("tools/gate.zig"));
+    try std.testing.expect(!shipsToUsers("conformance/conform.zig"));
+}
 
 fn rot13(allocator: Allocator, text: []const u8) ![]u8 {
     const out = try allocator.alloc(u8, text.len);

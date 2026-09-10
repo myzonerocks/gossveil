@@ -1,0 +1,50 @@
+[
+ {
+  "op": "aep_derive",
+  "args": {
+   "aep": "1562yk4tfqu80oonaigpctmlllimex32h4tlcl78oxkbxmthzswf0dgzeicuh3mr"
+  },
+  "result": {
+   "svr_key": "2EzZpY9RSNKfCA1wdvEggIsVEF4mbdPD9YWXiTHRg2M=",
+   "backup_key": "1rblfW/BURJSFIARvWWTgJ/jloV7i17sJMk1unDZ9Cs="
+  },
+  "check": true
+ },
+ {
+  "op": "aep_valid",
+  "args": {
+   "aep": "1562yk4tfqu80oonaigpctmlllimex32h4tlcl78oxkbxmthzswf0dgzeicuh3mr"
+  },
+  "result": {
+   "ok": true
+  },
+  "check": true
+ },
+ {
+  "op": "aep_valid",
+  "args": {
+   "aep": "nope"
+  },
+  "result": {
+   "ok": false
+  },
+  "check": true
+ },
+ {
+  "op": "backup_key_derive",
+  "args": {
+   "backup_key": "1rblfW/BURJSFIARvWWTgJ/jloV7i17sJMk1unDZ9Cs=",
+   "aci": "8c78cd2a-16ff-427d-83dc-1a5e36ce713d",
+   "media_name": "photo.jpg"
+  },
+  "result": {
+   "backup_id": "XiVe8FstH4tRfoOMnKZaVg==",
+   "ec_priv": "KEyvkOpcweTunk1/ci8wGEblnSKNtYbt3/hzLAaYbVo=",
+   "local_metadata_key": "qM4I5Ayyka7gZZW1pVqUzm6F5qYC5u02jTjGHo7W9zE=",
+   "media_id": "Fn95zUDJlWT9oAXZMbZB",
+   "media_key": "gAlVJHXtT6oY2ZhBzlXpY314htw0j44VknhnAEGNRFOuYJbRlGLRCLCrYuazlgjUBXV7PQ1R3vLijrYbkweQfg==",
+   "thumbnail_key": "3ucIXJOxFU5j/Kqr1VkYuJJPAH16XiiyEM/WT8bHbrA1wVZD1xyqsP3JiPNzz6NIc1Bwf3BjUXdM3nVy4HqPCg=="
+  },
+  "check": true
+ }
+]

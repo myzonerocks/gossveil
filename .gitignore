@@ -8,6 +8,7 @@
 !/.github/**
 !/.gitignore
 !/.zigversion
+!/CHANGELOG.md
 !/CONTRIBUTING.md
 !/LICENSE.md
 !/NOTICE.md

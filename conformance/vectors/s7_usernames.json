@@ -1,0 +1,222 @@
+[
+ {
+  "op": "username_hash",
+  "args": {
+   "username": "plain_user.42"
+  },
+  "result": {
+   "hash": "aMMEJwk8+PYBQfdQ6zJqGKQKqu60DFh+P80NiBS1WWc="
+  },
+  "check": true
+ },
+ {
+  "op": "username_proof",
+  "args": {
+   "username": "plain_user.42",
+   "random": "o35QAxBNkdpPmzC7PzTv3CZQrQDttIBQM3eNz3Oa44U="
+  },
+  "result": {
+   "proof": "iqwcC1f77PXZRL16McbW32+fGWBwOOWflpkcquxkqgsKyIxvfCudWUHL+Z1GhF0v3/9EP7uocyE/vkUfUHVUCKv4i8sE7CGzwG+xSg7Ou6o3I6l+uu+ERoVQMpBYloIKfMJVC9Q+nmssbM4lSksQxKcnQnjbxO7BIzMrq4E40AM="
+  },
+  "check": true
+ },
+ {
+  "op": "username_verify",
+  "args": {
+   "proof": "iqwcC1f77PXZRL16McbW32+fGWBwOOWflpkcquxkqgsKyIxvfCudWUHL+Z1GhF0v3/9EP7uocyE/vkUfUHVUCKv4i8sE7CGzwG+xSg7Ou6o3I6l+uu+ERoVQMpBYloIKfMJVC9Q+nmssbM4lSksQxKcnQnjbxO7BIzMrq4E40AM=",
+   "hash": "aMMEJwk8+PYBQfdQ6zJqGKQKqu60DFh+P80NiBS1WWc="
+  },
+  "result": {
+   "ok": true
+  },
+  "check": true
+ },
+ {
+  "op": "username_link_decrypt",
+  "args": {
+   "entropy": "2sja6QP8TTZw3hQD8vyqNhI97FIYT6GPRgeBehbqpWo=",
+   "encrypted": "jQYjWFpzEbvViGyGh4zQSU9peE6nWhAr6vKvtmSfXkNqPzlZ8UmvYQSLiMeFgjGJbi3arswRwBqzpowYythAMt3gMQDBGTbgeyHbVvqq9y+cLFCeXtgGw55paTIWfWNzT30+cj2MOPE89x6FJbRjTg=="
+  },
+  "result": {
+   "username": "plain_user.42"
+  },
+  "check": true
+ },
+ {
+  "op": "username_link_create",
+  "args": {
+   "username": "plain_user.42",
+   "entropy": "2sja6QP8TTZw3hQD8vyqNhI97FIYT6GPRgeBehbqpWo="
+  },
+  "result": {
+   "entropy": "2sja6QP8TTZw3hQD8vyqNhI97FIYT6GPRgeBehbqpWo=",
+   "encrypted": "FmZrjLqKRsCj+R8BP2wp6Ub3lJjognoaLKZrQEM4dXvk7ukVyyqBwVgxFB/THaWjUv3gGKzAP8EpnfWrQcZ/wRzwyMwr2giZDwLihlbQXUdwqelSeklXD1QhsLnEthCnQ3IsnyjnY+YKc0/c5CqjkQ=="
+  },
+  "check": false
+ },
+ {
+  "op": "username_hash",
+  "args": {
+   "username": "j.01"
+  },
+  "result": {
+   "hash": "Dk8szKTQYYwj8R7IPI4fQUwRYMsmNRawDLg/szpzJR4="
+  },
+  "check": true
+ },
+ {
+  "op": "username_proof",
+  "args": {
+   "username": "j.01",
+   "random": "WC7H4SR/q/Hw3HrGq31NW0Rf1RpFDUi8h0W8dWNbv0M="
+  },
+  "result": {
+   "proof": "aggmLX9aA0h4qpHDiyiO5+hRkIb4fEEo5dhge7AkawTCivOhvHO+NE5hu0Q8XakrXJvYZh4pNX9Z3DS+O9uDCLTuWbQ31rv+W1NkqrwrARZKBueiQcI/hVOXxw3PwjEHZSHah8CxdW3WJ8nYDWbXCq0Vu9Lb1QeW+JgtpwMzPgY="
+  },
+  "check": true
+ },
+ {
+  "op": "username_verify",
+  "args": {
+   "proof": "aggmLX9aA0h4qpHDiyiO5+hRkIb4fEEo5dhge7AkawTCivOhvHO+NE5hu0Q8XakrXJvYZh4pNX9Z3DS+O9uDCLTuWbQ31rv+W1NkqrwrARZKBueiQcI/hVOXxw3PwjEHZSHah8CxdW3WJ8nYDWbXCq0Vu9Lb1QeW+JgtpwMzPgY=",
+   "hash": "Dk8szKTQYYwj8R7IPI4fQUwRYMsmNRawDLg/szpzJR4="
+  },
+  "result": {
+   "ok": true
+  },
+  "check": true
+ },
+ {
+  "op": "username_link_decrypt",
+  "args": {
+   "entropy": "/7VBRqAm7gAoh+D/JXHQ7tqpbhVtfoXe4ofkltxBfUU=",
+   "encrypted": "Mj2ZDEHiLMqe52NcoGY2Co+Pp4yi+cvlzfOC0jWEAx6ZYtcEIrrUjvYoMxui7T5CRFpL1Q+X3gPJrzuGHpGh8YbXa2b92dA67FmFbNMw5pU4Pr3D7p6dyYm3bkL6S0XWf6YRj4T5YSrmu1jdhL5Tfg=="
+  },
+  "result": {
+   "username": "j.01"
+  },
+  "check": true
+ },
+ {
+  "op": "username_link_create",
+  "args": {
+   "username": "j.01",
+   "entropy": "/7VBRqAm7gAoh+D/JXHQ7tqpbhVtfoXe4ofkltxBfUU="
+  },
+  "result": {
+   "entropy": "/7VBRqAm7gAoh+D/JXHQ7tqpbhVtfoXe4ofkltxBfUU=",
+   "encrypted": "xk4XgEDsTlTnPjef6Kc/VHst6TS3ad7DcE0B9hHP7YKL4+eLSTgXezGr8cbUF7buulNzam0WlDqPKvlxApPchmtCysJHLYvmtR3LbARza8D0GbDvZj7pdgaiP/NJP+r+MyDtj3gVzekkFokU1DpMww=="
+  },
+  "check": false
+ },
+ {
+  "op": "username_hash",
+  "args": {
+   "username": "zz_top.999999999"
+  },
+  "result": {
+   "hash": "VEviP1O0yjSMAmmvMWhDnaMhpOI9EjPleA+AxRs0tHc="
+  },
+  "check": true
+ },
+ {
+  "op": "username_proof",
+  "args": {
+   "username": "zz_top.999999999",
+   "random": "eny3HvRljXpMFfJoH5LNBmqllc/HF6euAO2R0/d7NlQ="
+  },
+  "result": {
+   "proof": "bLoTRvmziVpgLSqgqTJRCJVwwS3yMr/tBlblesJNqwfCYRELxy19TGkl7r7K7EXg4bB6sYJ4+SdxbkRHzHvYDnUnbuUnXnPXZhjdtilCPdftgiLPvld+lnspnoiuGqQAKy56fj17PK4UyHtFkwRPw2GTxmiU3tRQgUGs85o0rgk="
+  },
+  "check": true
+ },
+ {
+  "op": "username_verify",
+  "args": {
+   "proof": "bLoTRvmziVpgLSqgqTJRCJVwwS3yMr/tBlblesJNqwfCYRELxy19TGkl7r7K7EXg4bB6sYJ4+SdxbkRHzHvYDnUnbuUnXnPXZhjdtilCPdftgiLPvld+lnspnoiuGqQAKy56fj17PK4UyHtFkwRPw2GTxmiU3tRQgUGs85o0rgk=",
+   "hash": "VEviP1O0yjSMAmmvMWhDnaMhpOI9EjPleA+AxRs0tHc="
+  },
+  "result": {
+   "ok": true
+  },
+  "check": true
+ },
+ {
+  "op": "username_link_decrypt",
+  "args": {
+   "entropy": "90phFMAPcLVRcQMMYpN00UejDn4iT27gauTXbe+Gvzw=",
+   "encrypted": "ukFd+aysmVilSryDUy13/VqgAwWnB/YHN36hhvp3eDyO5PYnjkHRHCV2A6N3aSJirwjb7BHErWd54QwYB5iaRiVEVgS0y2ohvGy6a4D6Z3sv7RV3GVwvFVrCxT2y8a34jzDZHHRX9sSL2GMkAPAZXQ=="
+  },
+  "result": {
+   "username": "zz_top.999999999"
+  },
+  "check": true
+ },
+ {
+  "op": "username_link_create",
+  "args": {
+   "username": "zz_top.999999999",
+   "entropy": "90phFMAPcLVRcQMMYpN00UejDn4iT27gauTXbe+Gvzw="
+  },
+  "result": {
+   "entropy": "90phFMAPcLVRcQMMYpN00UejDn4iT27gauTXbe+Gvzw=",
+   "encrypted": "SsdZz9RO7tH0CWZHTaXHMl+bxFckRTCk1cYcqYd2nZ/ka8eyR78DWCJUntOLQxD8L4/6/axf/1HHGIjUm4ZzYZVLoWx7kj95HKr9dmNnI5FA/SpCe8D85ovkVOt2WAQ0mqWeIk8mNE3wb1UKfCNPUA=="
+  },
+  "check": false
+ },
+ {
+  "op": "username_hash",
+  "args": {
+   "username": "a1b2c3.1234"
+  },
+  "result": {
+   "hash": "8FreMoxJ3wrg8HSMlFsaRVH53X9qNtnLnSiXZBw0dn4="
+  },
+  "check": true
+ },
+ {
+  "op": "username_proof",
+  "args": {
+   "username": "a1b2c3.1234",
+   "random": "1lRzeqM0K65TJBz3GuZZFI0o0jd5JDshtzPeXDeMw04="
+  },
+  "result": {
+   "proof": "QERkFWql3GNPutKWybgbqxLMYBmoVTjtvC9SwC/fogdoCivgafb6MfdKiQR2SRGFyB4tActkaSYcP8NMXYXhCzvJALjIb4RkCJFuaw9p5+wvovd8E5uoG2bGX0WRoIkHpPIgUVPIEjWmkTXTxkBrOJrzqvVz3u9qXWTn6JwJ/gk="
+  },
+  "check": true
+ },
+ {
+  "op": "username_verify",
+  "args": {
+   "proof": "QERkFWql3GNPutKWybgbqxLMYBmoVTjtvC9SwC/fogdoCivgafb6MfdKiQR2SRGFyB4tActkaSYcP8NMXYXhCzvJALjIb4RkCJFuaw9p5+wvovd8E5uoG2bGX0WRoIkHpPIgUVPIEjWmkTXTxkBrOJrzqvVz3u9qXWTn6JwJ/gk=",
+   "hash": "8FreMoxJ3wrg8HSMlFsaRVH53X9qNtnLnSiXZBw0dn4="
+  },
+  "result": {
+   "ok": true
+  },
+  "check": true
+ },
+ {
+  "op": "username_link_decrypt",
+  "args": {
+   "entropy": "SJKTOCHB3fFq4egeqKDe6QFteO0GY2+0E7g/lM71dKA=",
+   "encrypted": "LaEpNHyHzOfqrO7g/0pilg/DukUSm5VMedtFrwAHmMa3SYvGpTLAevaB7Q7JHZuQ9RqH3AwvR+Rv9VIXvRH9cwYXcSSN+FVZOF0p2DmKi7O9OC3jTMiRaFSLgTb3yySPjathlPuJYQUjB8KoUEtjXg=="
+  },
+  "result": {
+   "username": "a1b2c3.1234"
+  },
+  "check": true
+ },
+ {
+  "op": "username_link_create",
+  "args": {
+   "username": "a1b2c3.1234",
+   "entropy": "SJKTOCHB3fFq4egeqKDe6QFteO0GY2+0E7g/lM71dKA="
+  },
+  "result": {
+   "entropy": "SJKTOCHB3fFq4egeqKDe6QFteO0GY2+0E7g/lM71dKA=",
+   "encrypted": "Pti1GqwbsgLD6ECpwpOeM1fHYfXJlWnxNsYiUfJfHvpzcqeICKqocif2F5tk1qacTovH1o1snNu6GBtL7iKTJgakEfaoMaTXuwBquPeLxHe677z3Ou0zBKu2l7NikSgu38FSw6FddjCyQSV4ofsKrg=="
+  },
+  "check": false
+ }
+]

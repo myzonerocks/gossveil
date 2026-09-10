@@ -158,7 +158,7 @@ jobs:
             git push origin ":refs/tags/${RELEASE_TAG}" 2>/dev/null || true
             target=(--target "${GITHUB_SHA}")
           fi
-          notes="SwiftPM binaryTarget checksum: $(cat dist/apple/GossveilKit.checksum.txt)"
+          notes="$(tools/changelog-cut.sh --show)"$'\n\n'"SwiftPM binaryTarget checksum: $(cat dist/apple/GossveilKit.checksum.txt)"
           assets=(dist/android/gossveil-android-jniLibs.zip dist/apple/GossveilKit.xcframework.zip dist/web/*.tgz)
           case "${RELEASE_TAG#v}" in *-*) target+=(--prerelease) ;; esac
           gh release create "${RELEASE_TAG}" "${target[@]}" "${assets[@]}" --title "${RELEASE_TAG}" --notes "$notes"
@@ -190,9 +190,10 @@ jobs:
           checksum=$(cat dist/apple/GossveilKit.checksum.txt)
           tools/pin-swift-xcframework.sh "${RELEASE_TAG}" "${checksum}"
           tools/stamp-doc-versions.sh "${RELEASE_TAG}"
-          git diff --quiet Package.swift README.md && { echo "main already current"; exit 0; }
-          git add Package.swift README.md
-          git commit -m "release ${RELEASE_TAG}: pin the swift xcframework and stamp the install docs"
+          tools/changelog-cut.sh "${RELEASE_TAG}" >/dev/null
+          git diff --quiet Package.swift README.md CHANGELOG.md && { echo "main already current"; exit 0; }
+          git add Package.swift README.md CHANGELOG.md
+          git commit -m "release ${RELEASE_TAG}: pin the swift xcframework, stamp the install docs, cut the changelog"
           if ! git push "https://x-access-token:${RELEASE_PAT}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main; then
             branch="release-pin-${RELEASE_TAG}"
             git push -f "https://x-access-token:${RELEASE_PAT}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${branch}"

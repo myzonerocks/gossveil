@@ -10,17 +10,54 @@ core.**
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE.md)
 [![platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20Web-informational.svg)](#install)
 
-[Install](#install) &nbsp;&middot;&nbsp; [What you get](#what-you-get) &nbsp;&middot;&nbsp; [Use](#use) &nbsp;&middot;&nbsp; [Contributing](CONTRIBUTING.md)
+[Install](#install) &nbsp;&middot;&nbsp;
+[What you get](#what-you-get) &nbsp;&middot;&nbsp;
+[Use](#use) &nbsp;&middot;&nbsp;
+[Documentation](#documentation) &nbsp;&middot;&nbsp;
+[Provenance](PROVENANCE.md) &nbsp;&middot;&nbsp;
+[Contributing](CONTRIBUTING.md)
 
 </div>
 
 One core in Zig with no runtime dependencies, a C ABI over it, and three thin packages: Swift,
-Kotlin and TypeScript over a WebAssembly build. Every message, record and key follows the
-published protocol specifications byte for byte, so a session started on one platform continues
-on another and a record exported by one implementation opens in the next. Frozen wire vectors
-replay on every build to keep it that way.
+Kotlin and TypeScript over a WebAssembly build.
 
-Inspired by the Signal protocol specifications.
+Protocol-defined wire behaviour is kept consistent across every supported platform. Key
+encodings, record layouts, message framing and key schedules are checked against frozen wire
+vectors recorded by this project's own tooling and replayed on every build. A session started
+with Gossveil on one platform can continue on another without changing the cryptographic core or
+wire representation.
+
+## Protocol provenance
+
+Gossveil is an independent implementation of publicly specified secure-messaging protocols and
+cryptographic standards.
+
+Some protocol behaviour implemented by Gossveil is defined by publicly available protocol
+specifications published by Signal. Gossveil is not a fork, port, translation, modification or
+derivative distribution of libsignal or any other protocol implementation. No source code from
+those implementations is incorporated into this project.
+
+The architecture, implementation, tests, documentation and build tooling are independently
+authored for this project or contributed under the Apache License, Version 2.0.
+
+Where implementations of the same protocol must agree, they agree on protocol-defined behaviour:
+key encodings, record layouts, message framing, key schedules and other interoperability
+requirements fixed by the relevant specifications. Gossveil's module layout, types, functions,
+comments, tests and internal architecture are this project's own expression.
+
+Gossveil is an independent project and is not affiliated with, sponsored by or endorsed by
+Signal.
+
+For the complete provenance statement, see [PROVENANCE.md](PROVENANCE.md).
+
+For the public API surface, see [docs/API.md](docs/API.md).
+
+For how the core, C ABI and platform packages fit together, see
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+For the design followed by the implementation, see
+[docs/DESIGN.md](docs/DESIGN.md).
 
 ## Install
 
@@ -65,22 +102,68 @@ bun add @myzonerocks/gossveil@0.1.0-alpha.1
 Stores live in your app, in your language. Every operation loads what it needs, calls the core
 with records, and hands records back.
 
+**Swift**
+
 ```swift
 import Gossveil
-try processPreKeyBundle(bundle, for: peer, ourAddress: me, sessionStore: store, identityStore: store, context: NullContext())
-let sealed = try signalEncrypt(message: plaintext, for: peer, localAddress: me, sessionStore: store, identityStore: store, context: NullContext())
+
+try processPreKeyBundle(
+    bundle,
+    for: peer,
+    ourAddress: me,
+    sessionStore: store,
+    identityStore: store,
+    context: NullContext()
+)
+
+let sealed = try signalEncrypt(
+    message: plaintext,
+    for: peer,
+    localAddress: me,
+    sessionStore: store,
+    identityStore: store,
+    context: NullContext()
+)
 ```
+
+**Kotlin**
 
 ```kotlin
 import com.gossveil.*
-SessionBuilder(store, store, store, store, peer).process(bundle)
-val message = SessionCipher(store, store, store, store, store, peer).encrypt(plaintext)
+
+SessionBuilder(
+    store,
+    store,
+    store,
+    store,
+    peer
+).process(bundle)
+
+val message = SessionCipher(
+    store,
+    store,
+    store,
+    store,
+    store,
+    peer
+).encrypt(plaintext)
 ```
+
+**TypeScript**
 
 ```ts
 import init, { init as ready, encryptMessage } from '@myzonerocks/gossveil'
-await init(); ready()
-const ct = await encryptMessage(plaintext, peer, me, sessions, identities)
+
+await init()
+ready()
+
+const ct = await encryptMessage(
+  plaintext,
+  peer,
+  me,
+  sessions,
+  identities
+)
 ```
 
 The full surface per language is in [docs/API.md](docs/API.md); how the layers fit is in
@@ -93,7 +176,7 @@ Requires the pinned Zig, installed by `tools/toolchain-sync` into `.local/zig`.
 
 ```sh
 tools/toolchain-sync
-zig build ci                                  # unit tests, the source gate
+zig build ci                                  # unit tests, the frozen vectors, the C example, the source gate
 zig build conformance                         # replay the frozen wire vectors
 tools/build-xcframework.sh && swift test      # the Swift package
 zig build wasm -Doptimize=ReleaseFast && (cd sdk/ts && bun run build && bun test)
@@ -106,5 +189,19 @@ Anything that talks to a particular service: registration, contact discovery, ke
 enclaves, key transparency, backup-file validation and credential issuance belong to the
 application and its own backend.
 
-Apache-2.0. See [LICENSE.md](LICENSE.md), [NOTICE.md](NOTICE.md) and
+## Documentation
+
+- [API](docs/API.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Design](docs/DESIGN.md)
+- [Provenance](PROVENANCE.md)
+- [Contributing](CONTRIBUTING.md)
+- [License](LICENSE.md)
+- [Third-party notices](NOTICE.md)
+
+## License
+
+Gossveil is licensed under the Apache License, Version 2.0.
+
+See [LICENSE.md](LICENSE.md), [NOTICE.md](NOTICE.md) and
 [PROVENANCE.md](PROVENANCE.md).

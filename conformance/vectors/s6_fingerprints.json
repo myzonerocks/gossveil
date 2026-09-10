@@ -1,0 +1,83 @@
+[
+ {
+  "op": "fingerprint",
+  "args": {
+   "version": 1,
+   "iterations": 5200,
+   "local_id": "KzE0MTUyMjIyMjIy",
+   "local_key": "BWiYL/PlxvcyY5y5Ni0dSQWtG9y/PfNml16FVTEBfoYN",
+   "remote_id": "KzE0MTUzMzMzMzMz",
+   "remote_key": "BcAN+UPY0aZQdEf7vsB7NyIerf8QaQuPr6qeTSFxing/"
+  },
+  "result": {
+   "display": "036951806064938794760319815006059367351393779777737272125543",
+   "scannable": "CAESIgogQHJJL9BpzFG3aWIUEBbzL+29bs3ERHwVsWsG8ICnIf0aIgogtpy4yS/fY/avDAHq3zjqmcmTcTSmQAFgfpSjFmo+s/A="
+  },
+  "check": true
+ },
+ {
+  "op": "fingerprint_compare",
+  "args": {
+   "ours": "CAESIgogQHJJL9BpzFG3aWIUEBbzL+29bs3ERHwVsWsG8ICnIf0aIgogtpy4yS/fY/avDAHq3zjqmcmTcTSmQAFgfpSjFmo+s/A=",
+   "theirs": "CAESIgogtpy4yS/fY/avDAHq3zjqmcmTcTSmQAFgfpSjFmo+s/AaIgogQHJJL9BpzFG3aWIUEBbzL+29bs3ERHwVsWsG8ICnIf0="
+  },
+  "result": {
+   "ok": true
+  },
+  "check": true
+ },
+ {
+  "op": "fingerprint",
+  "args": {
+   "version": 2,
+   "iterations": 5200,
+   "local_id": "KzE0MTUyMjIyMjIy",
+   "local_key": "BWiYL/PlxvcyY5y5Ni0dSQWtG9y/PfNml16FVTEBfoYN",
+   "remote_id": "KzE0MTUzMzMzMzMz",
+   "remote_key": "BcAN+UPY0aZQdEf7vsB7NyIerf8QaQuPr6qeTSFxing/"
+  },
+  "result": {
+   "display": "036951806064938794760319815006059367351393779777737272125543",
+   "scannable": "CAISIgogQHJJL9BpzFG3aWIUEBbzL+29bs3ERHwVsWsG8ICnIf0aIgogtpy4yS/fY/avDAHq3zjqmcmTcTSmQAFgfpSjFmo+s/A="
+  },
+  "check": true
+ },
+ {
+  "op": "fingerprint_compare",
+  "args": {
+   "ours": "CAISIgogQHJJL9BpzFG3aWIUEBbzL+29bs3ERHwVsWsG8ICnIf0aIgogtpy4yS/fY/avDAHq3zjqmcmTcTSmQAFgfpSjFmo+s/A=",
+   "theirs": "CAISIgogtpy4yS/fY/avDAHq3zjqmcmTcTSmQAFgfpSjFmo+s/AaIgogQHJJL9BpzFG3aWIUEBbzL+29bs3ERHwVsWsG8ICnIf0="
+  },
+  "result": {
+   "ok": true
+  },
+  "check": true
+ },
+ {
+  "op": "fingerprint",
+  "args": {
+   "version": 2,
+   "iterations": 1024,
+   "local_id": "KzE0MTUyMjIyMjIy",
+   "local_key": "BWiYL/PlxvcyY5y5Ni0dSQWtG9y/PfNml16FVTEBfoYN",
+   "remote_id": "KzE0MTUzMzMzMzMz",
+   "remote_key": "BcAN+UPY0aZQdEf7vsB7NyIerf8QaQuPr6qeTSFxing/"
+  },
+  "result": {
+   "display": "643190898076265897102514166654698400116374448792802466110017",
+   "scannable": "CAISIgogxae9ebC6m+s5S/ej8hkQ77kpXDDpLQKX9RMc5GoBfsoaIgogI8VW73/qPHFalHdD8QGJW7ZH6A4TA2Z19R3gcrnea1M="
+  },
+  "check": true
+ },
+ {
+  "op": "fingerprint_compare",
+  "args": {
+   "ours": "CAISIgogxae9ebC6m+s5S/ej8hkQ77kpXDDpLQKX9RMc5GoBfsoaIgogI8VW73/qPHFalHdD8QGJW7ZH6A4TA2Z19R3gcrnea1M=",
+   "theirs": "CAISIgogI8VW73/qPHFalHdD8QGJW7ZH6A4TA2Z19R3gcrnea1MaIgogxae9ebC6m+s5S/ej8hkQ77kpXDDpLQKX9RMc5GoBfso="
+  },
+  "result": {
+   "ok": true
+  },
+  "check": true
+ }
+]

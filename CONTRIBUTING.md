@@ -12,7 +12,7 @@ other version.
 ```sh
 tools/toolchain-sync
 export PATH="$PWD/.local/zig/current:$PATH"
-zig build ci                 # unit tests, the source gate, the gate's own tests
+zig build ci                 # unit tests, the frozen vectors, the C example, the source gate
 zig build conformance        # replay the frozen wire vectors
 ```
 
@@ -33,6 +33,10 @@ zig build jni android -Doptimize=ReleaseFast && (cd sdk/kotlin && ./gradlew :lib
 ```
 
 A wire change re-freezes `conformance/vectors/` and says so in the pull request.
+
+A change under `core/`, `abi/`, `include/`, `sdk/` or the vectors adds a line under **Unreleased**
+in `CHANGELOG.md`; the gate refuses the pull request otherwise. A release moves that section under
+its tag (`tools/changelog-cut.sh`) and publishes it as the release notes.
 
 ## Writing
 
