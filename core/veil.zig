@@ -32,6 +32,16 @@ pub const ratchet = struct {
     pub const state = @import("ratchet/state.zig");
     pub const State = state.State;
     pub const Archive = @import("ratchet/archive.zig").Archive;
+    pub const pq = struct {
+        pub const field = @import("ratchet/pq/field.zig");
+        pub const code = @import("ratchet/pq/code.zig");
+        pub const auth = @import("ratchet/pq/auth.zig");
+        pub const kem = @import("ratchet/pq/kem.zig");
+        pub const stream = @import("ratchet/pq/stream.zig");
+        pub const packet = @import("ratchet/pq/packet.zig");
+        pub const braid = @import("ratchet/pq/braid.zig");
+        pub const record = @import("ratchet/pq/record.zig");
+    };
 };
 
 pub const handshake = struct {
@@ -52,5 +62,6 @@ test {
     std.testing.refAllDecls(ident);
     std.testing.refAllDecls(bundle);
     std.testing.refAllDecls(ratchet);
+    std.testing.refAllDecls(ratchet.pq);
     std.testing.refAllDecls(handshake);
 }
