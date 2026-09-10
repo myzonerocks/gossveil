@@ -56,6 +56,8 @@ jobs:
         run: zig build conformance
       - name: c example
         run: zig build c-example
+      - name: c package
+        run: zig build c
       - uses: actions/cache/save@v4
         if: github.ref == 'refs/heads/main'
         with:
