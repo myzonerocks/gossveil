@@ -208,8 +208,8 @@ const handlers = std.StaticStringMap(Handler).initComptime(.{
     .{ "username_verify", opHandleVerify },
     .{ "username_link_create", opHandleLink },
     .{ "username_link_decrypt", opHandleLinkOpen },
-    .{ "aep_derive", opPoolDerive },
-    .{ "aep_valid", opPoolValid },
+    .{ "account_pool_derive", opPoolDerive },
+    .{ "account_pool_valid", opPoolValid },
     .{ "backup_key_derive", opBackupKeyDerive },
     .{ "hkdf", opHkdf },
     .{ "aes_gcm_siv_encrypt", opSivSeal },
@@ -217,23 +217,23 @@ const handlers = std.StaticStringMap(Handler).initComptime(.{
     .{ "decryption_error_message", opReport },
     .{ "decryption_error_for_original", opReportForOriginal },
     .{ "decryption_error_message_parse", opReportParse },
-    .{ "plaintext_content_from_dem", opPlainFromReport },
-    .{ "plaintext_content_extract_dem", opPlainExtractReport },
+    .{ "plaintext_content_from_report", opPlainFromReport },
+    .{ "plaintext_content_extract_report", opPlainExtractReport },
     .{ "server_cert_new", opServerCert },
     .{ "server_cert_parse", opServerCertParse },
     .{ "sender_cert_new", opSenderCert },
     .{ "sender_cert_parse", opSenderCertParse },
-    .{ "usmc_new", opContent },
-    .{ "usmc_parse", opContentParse },
+    .{ "content_make", opContent },
+    .{ "content_parse", opContentParse },
     .{ "sealed_sender_encrypt", opEnvelopeSeal },
-    .{ "sealed_sender_decrypt_to_usmc", opEnvelopeOpen },
+    .{ "sealed_sender_open_content", opEnvelopeOpen },
     .{ "sealed_sender_v2_encrypt", opEnvelopeSealMany },
     .{ "sealed_sender_v2_single", opEnvelopeSplit },
     .{ "group_master_key", opCircleMaster },
     .{ "group_secret_params_parse", opCircleParamsParse },
-    .{ "spqr_init", opBraidStart },
-    .{ "spqr_send", opBraidSend },
-    .{ "spqr_recv", opBraidReceive },
+    .{ "pq_ratchet_start", opBraidStart },
+    .{ "pq_ratchet_send", opBraidSend },
+    .{ "pq_ratchet_receive", opBraidReceive },
 });
 
 fn usFrom(in: Input, key: []const u8) !identity.IdentityPair {
@@ -569,13 +569,13 @@ fn opHandleLinkOpen(arena: Allocator, in: Input, out: *Answer) !void {
 }
 
 fn opPoolDerive(_: Allocator, in: Input, out: *Answer) !void {
-    const pool = try account.EntropyPool.parse(try in.str("aep"));
+    const pool = try account.EntropyPool.parse(try in.str("pool"));
     try out.blob("svr_key", &pool.recoveryKey());
     try out.blob("backup_key", &pool.backupKey().bytes);
 }
 
 fn opPoolValid(_: Allocator, in: Input, out: *Answer) !void {
-    try out.flag("ok", account.EntropyPool.valid(try in.str("aep")));
+    try out.flag("ok", account.EntropyPool.valid(try in.str("pool")));
 }
 
 fn opBackupKeyDerive(_: Allocator, in: Input, out: *Answer) !void {
@@ -623,12 +623,12 @@ fn opReportParse(_: Allocator, in: Input, out: *Answer) !void {
 }
 
 fn opPlainFromReport(arena: Allocator, in: Input, out: *Answer) !void {
-    try out.blob("serialized", try post_content.fromReport(arena, try in.blob("dem")));
+    try out.blob("serialized", try post_content.fromReport(arena, try in.blob("report")));
 }
 
 fn opPlainExtractReport(arena: Allocator, in: Input, out: *Answer) !void {
     const plain = try post_content.Plain.parse(arena, try in.blob("serialized"));
-    try out.blob("dem", try post_content.reportIn(plain.body));
+    try out.blob("report", try post_content.reportIn(plain.body));
 }
 
 fn opServerCert(arena: Allocator, in: Input, out: *Answer) !void {
@@ -673,7 +673,7 @@ fn opSenderCertParse(arena: Allocator, in: Input, out: *Answer) !void {
 fn opContent(arena: Allocator, in: Input, out: *Answer) !void {
     const sender = try certificate.SenderCert.parse(arena, try in.blob("sender_cert"));
     const hint: veil.envelope.content.Hint = @enumFromInt(try in.word32("hint"));
-    const content = try Content.make(arena, try kindFrom(try in.number("type")), &sender, try in.blob("content"), hint, try in.optBlob("group_id"));
+    const content = try Content.make(arena, try kindFrom(try in.number("type")), &sender, try in.blob("body"), hint, try in.optBlob("group_id"));
     try out.blob("serialized", content.bytes);
 }
 
@@ -681,21 +681,21 @@ fn opContentParse(arena: Allocator, in: Input, out: *Answer) !void {
     const content = try Content.parse(arena, try in.blob("serialized"));
     try out.number("type", @intFromEnum(content.kind));
     try out.number("hint", @intFromEnum(content.hint));
-    try out.blob("content", content.body);
+    try out.blob("body", content.body);
     try out.blob("sender_cert", content.sender.bytes);
     if (content.circle_id) |g| try out.blob("group_id", g);
 }
 
 fn opEnvelopeSeal(arena: Allocator, in: Input, out: *Answer) !void {
-    const content = try Content.parse(arena, try in.blob("usmc"));
+    const content = try Content.parse(arena, try in.blob("content"));
     try out.blob("message", try envelope_seal.seal(arena, try usFrom(in, "identity_priv"), try curve.Public.parse(try in.blob("recipient_identity")), &content));
 }
 
 fn opEnvelopeOpen(arena: Allocator, in: Input, out: *Answer) !void {
     const content = try envelope_seal.open(arena, try usFrom(in, "identity_priv"), try in.blob("message"));
-    try out.blob("usmc", content.bytes);
+    try out.blob("content", content.bytes);
     try out.number("type", @intFromEnum(content.kind));
-    try out.blob("content", content.body);
+    try out.blob("body", content.body);
     try out.text("sender_uuid", content.sender.sender_id);
     try out.number("sender_device_id", content.sender.sender_device);
     try out.blob("sender_cert", content.sender.bytes);
@@ -718,7 +718,7 @@ fn opEnvelopeSealMany(arena: Allocator, in: Input, out: *Answer) !void {
             .identity = try curve.Public.parse(try one.blob("identity_key")),
         };
     }
-    const content = try Content.parse(arena, try in.blob("usmc"));
+    const content = try Content.parse(arena, try in.blob("content"));
     try out.blob("sent", try multiseal.sealForMany(arena, try usFrom(in, "identity_priv"), recipients, &.{}, &content));
 }
 

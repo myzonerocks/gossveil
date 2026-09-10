@@ -131,9 +131,9 @@
   "check": true
  },
  {
-  "op": "plaintext_content_from_dem",
+  "op": "plaintext_content_from_report",
   "args": {
-   "dem": "CiEF1GWzVwY/CeT1N7rKX4tW/DaEER8g15CRww9v99/etkoQgNCV/7wxGAM="
+   "report": "CiEF1GWzVwY/CeT1N7rKX4tW/DaEER8g15CRww9v99/etkoQgNCV/7wxGAM="
   },
   "result": {
    "serialized": "wEIsCiEF1GWzVwY/CeT1N7rKX4tW/DaEER8g15CRww9v99/etkoQgNCV/7wxGAOA"
@@ -141,12 +141,12 @@
   "check": true
  },
  {
-  "op": "plaintext_content_extract_dem",
+  "op": "plaintext_content_extract_report",
   "args": {
    "serialized": "wEIsCiEF1GWzVwY/CeT1N7rKX4tW/DaEER8g15CRww9v99/etkoQgNCV/7wxGAOA"
   },
   "result": {
-   "dem": "CiEF1GWzVwY/CeT1N7rKX4tW/DaEER8g15CRww9v99/etkoQgNCV/7wxGAM="
+   "report": "CiEF1GWzVwY/CeT1N7rKX4tW/DaEER8g15CRww9v99/etkoQgNCV/7wxGAM="
   },
   "check": true
  }

@@ -56,6 +56,17 @@ dependencies {
 // the Sonatype Central Portal. Coordinates and POM come from gradle.properties;
 // the token and signing key come from the release job. A source build without
 // a key (JitPack, a fork) publishes unsigned instead of failing.
+// A file repository under build/ so a sibling checkout consumes the AAR by path
+// before anything is published to a registry.
+publishing {
+    repositories {
+        maven {
+            name = "local"
+            url = uri(layout.buildDirectory.dir("repo"))
+        }
+    }
+}
+
 mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     if (project.findProperty("signingInMemoryKey") != null) {

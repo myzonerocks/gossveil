@@ -1,8 +1,8 @@
 [
  {
-  "op": "aep_derive",
+  "op": "account_pool_derive",
   "args": {
-   "aep": "1562yk4tfqu80oonaigpctmlllimex32h4tlcl78oxkbxmthzswf0dgzeicuh3mr"
+   "pool": "1562yk4tfqu80oonaigpctmlllimex32h4tlcl78oxkbxmthzswf0dgzeicuh3mr"
   },
   "result": {
    "svr_key": "2EzZpY9RSNKfCA1wdvEggIsVEF4mbdPD9YWXiTHRg2M=",
@@ -11,9 +11,9 @@
   "check": true
  },
  {
-  "op": "aep_valid",
+  "op": "account_pool_valid",
   "args": {
-   "aep": "1562yk4tfqu80oonaigpctmlllimex32h4tlcl78oxkbxmthzswf0dgzeicuh3mr"
+   "pool": "1562yk4tfqu80oonaigpctmlllimex32h4tlcl78oxkbxmthzswf0dgzeicuh3mr"
   },
   "result": {
    "ok": true
@@ -21,9 +21,9 @@
   "check": true
  },
  {
-  "op": "aep_valid",
+  "op": "account_pool_valid",
   "args": {
-   "aep": "nope"
+   "pool": "nope"
   },
   "result": {
    "ok": false

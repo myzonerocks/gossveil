@@ -12,3 +12,5 @@ A release moves that section under its tag with the date, and the release notes 
 - The three packages: Swift `Gossveil` over the `GossveilKit` XCFramework, Kotlin `com.gossveil`
   as `io.github.avosa:gossveil`, and `@myzonerocks/gossveil` for the browser and Node, with the
   names the clients called before the rename kept as aliases.
+- The conformance harness names every operation in this project's own vocabulary; the frozen
+  vectors carry the same names.
