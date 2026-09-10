@@ -7,6 +7,8 @@ A release moves that section under its tag with the date, and the release notes 
 
 ## v0.1.0-alpha.2 (2026-09-10)
 
+## v0.1.0-alpha.2 (2026-09-10)
+
 - The Apple framework names its executable in its property list, so a device installs it; a
   simulator never checked, so only a phone could catch this.
 - The Android package publishes unsigned when no signing key is given, so a fork or a source
