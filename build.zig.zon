@@ -1,0 +1,17 @@
+.{
+    .name = .gossveil,
+    .version = "0.1.0-alpha.1",
+    .fingerprint = 0x145a4a1e8ad6022,
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "core",
+        "abi",
+        "include",
+        "LICENSE.md",
+        "NOTICE.md",
+        "README.md",
+    },
+}

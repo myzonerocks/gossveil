@@ -1,0 +1,5 @@
+* text=auto eol=lf
+*.sh text eol=lf
+tools/toolchain-sync text eol=lf
+.githooks/* text eol=lf
+conformance/vectors/*.json linguist-generated=true

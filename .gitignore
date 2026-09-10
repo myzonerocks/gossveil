@@ -1,0 +1,51 @@
+# Everything the repository owns is re-included below; anything else that appears
+# at the root is ignored until it is claimed here, so a stray file never lands.
+/*
+!/.gitattributes
+!/.githooks/
+!/.github/
+!/.gitignore
+!/.zigversion
+!/CONTRIBUTING.md
+!/LICENSE.md
+!/NOTICE.md
+!/PROVENANCE.md
+!/README.md
+!/Package.swift
+!/build.zig
+!/build.zig.zon
+!/flake.nix
+!/flake.lock
+!/jitpack.yml
+!/abi/**
+!/conformance/**
+!/core/**
+!/docs/**
+!/examples/**
+!/include/**
+!/nix/**
+!/sdk/**
+!/tools/**
+
+# Private notes never enter history.
+docs/private/
+
+# Toolchain, caches and build products.
+.local/
+.zig-cache/
+zig-out/
+.build/
+.swiftpm/
+*.xcframework
+*.xcframework.zip
+*.checksum.txt
+sdk/ts/node_modules/
+sdk/ts/dist/
+sdk/ts/wasm/
+sdk/kotlin/.gradle/
+sdk/kotlin/build/
+sdk/kotlin/lib/build/
+sdk/kotlin/local.properties
+sdk/kotlin/.kotlin/
+examples/**/node_modules/
+.DS_Store

@@ -1,0 +1,85 @@
+name: cold
+
+# The from-scratch lane: no cache restore anywhere, so a warm run that passed
+# only because a cache key omitted an input diverges here. A cold failure on a
+# sha whose warm gates were green is an incident.
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch: {}
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+  pull_request:
+    paths:
+      - ".zigversion"
+      - "conformance/vectors/**"
+
+concurrency:
+  group: cold-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: toolchain
+        run: |
+          tools/toolchain-sync
+          echo "$PWD/.local/zig/current" >> "$GITHUB_PATH"
+      - name: gate suite, cold
+        run: zig build ci
+      - name: conformance, cold
+        run: zig build conformance
+      - name: divergence note
+        if: failure()
+        run: echo "cold diverged from warm on ${{ github.sha }}; a cache key omitted an input. Treat as an incident." >> "$GITHUB_STEP_SUMMARY"
+
+  apple:
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: toolchain
+        run: |
+          tools/toolchain-sync
+          echo "$PWD/.local/zig/current" >> "$GITHUB_PATH"
+      - name: xcframework and swift tests
+        run: |
+          tools/build-xcframework.sh
+          swift test
+
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: toolchain
+        run: |
+          tools/toolchain-sync
+          echo "$PWD/.local/zig/current" >> "$GITHUB_PATH"
+      - name: android libraries
+        run: zig build android -Doptimize=ReleaseFast
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: toolchain
+        run: |
+          tools/toolchain-sync
+          echo "$PWD/.local/zig/current" >> "$GITHUB_PATH"
+      - uses: oven-sh/setup-bun@v2
+      - name: build and test
+        working-directory: sdk/ts
+        run: |
+          bun install
+          bun run build
+          bun test

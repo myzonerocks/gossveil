@@ -1,0 +1,234 @@
+name: release
+
+# A version tag cross-compiles the core per target, gates each slice, and
+# attaches the prebuilt binaries to the GitHub Release so an app developer
+# never installs Zig: a jniLibs zip, a checksummed XCFramework for SwiftPM,
+# and the wasm inside an npm tarball. Registry pushes are guarded by secrets;
+# a tag always yields assets.
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version like 0.1.0-alpha.1 to tag, build and publish. Empty runs a dry run that publishes nothing."
+        required: false
+        default: ""
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: .local/zig
+          key: zig-${{ runner.os }}-${{ hashFiles('.zigversion') }}
+      - name: toolchain
+        run: |
+          tools/toolchain-sync
+          echo "$PWD/.local/zig/current" >> "$GITHUB_PATH"
+      - name: build android libraries
+        run: zig build android -Doptimize=ReleaseFast
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
+      # 16 KB page alignment is a Play gate on arm64; the JNI entry the Kotlin
+      # package binds must be exported.
+      - name: alignment and symbol gates
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          found=0
+          for so in zig-out/android/*/libgossveil_jni.so; do
+            found=1
+            abi=$(basename "$(dirname "$so")")
+            align=$(readelf -lW "$so" | awk '/LOAD/ {print $NF; exit}')
+            echo "== $so ($abi) LOAD align $align =="
+            [ -n "$align" ] || { echo "FAIL: could not read the LOAD alignment of $so"; exit 1; }
+            case "$abi" in
+              arm64-v8a) [ "$((align))" -ge 16384 ] || { echo "FAIL: $so LOAD alignment $align is below 16 KB"; exit 1; } ;;
+              *) echo "note: $abi is emulator-only; 16 KB alignment not enforced" ;;
+            esac
+            readelf -W --dyn-syms "$so" | awk '$NF ~ /^Java_com_gossveil_/ { found = 1 } END { exit !found }' \
+              || { echo "FAIL: $so exports no Java_com_gossveil_ JNI entry point"; exit 1; }
+          done
+          [ "$found" = 1 ] || { echo "FAIL: no libgossveil_jni.so was built"; exit 1; }
+      - name: package jniLibs
+        run: |
+          set -euo pipefail
+          ( cd zig-out/android && zip -r "$GITHUB_WORKSPACE/gossveil-android-jniLibs.zip" . -i '*/libgossveil_jni.so' )
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: gossveil-android-jniLibs.zip
+          if-no-files-found: error
+
+  apple:
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: .local/zig
+          key: zig-${{ runner.os }}-${{ hashFiles('.zigversion') }}
+      - name: toolchain
+        run: |
+          tools/toolchain-sync
+          echo "$PWD/.local/zig/current" >> "$GITHUB_PATH"
+      - name: assemble xcframework
+        run: |
+          tools/build-xcframework.sh
+          cp zig-out/GossveilKit.xcframework.zip zig-out/GossveilKit.checksum.txt .
+      - name: swift tests
+        run: swift test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apple
+          path: |
+            GossveilKit.xcframework.zip
+            GossveilKit.checksum.txt
+          if-no-files-found: error
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: .local/zig
+          key: zig-${{ runner.os }}-${{ hashFiles('.zigversion') }}
+      - name: toolchain
+        run: |
+          tools/toolchain-sync
+          echo "$PWD/.local/zig/current" >> "$GITHUB_PATH"
+      - uses: oven-sh/setup-bun@v2
+      # The package version is the release's own, stamped from the tag.
+      - name: pack the package
+        env:
+          RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || (inputs.version != '' && format('v{0}', inputs.version)) || '' }}
+        run: |
+          set -euo pipefail
+          cd sdk/ts
+          [ -z "${RELEASE_TAG}" ] || npm version --no-git-tag-version --allow-same-version "${RELEASE_TAG#v}"
+          bun install
+          bun run build
+          bun test
+          bun pm pack --destination "$GITHUB_WORKSPACE"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web
+          path: "*.tgz"
+          if-no-files-found: error
+
+  publish:
+    needs: [android, apple, web]
+    if: ${{ startsWith(github.ref, 'refs/tags/') || inputs.version != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      HAS_MAVEN: ${{ secrets.OSSRH_USERNAME != '' }}
+      HAS_NPM: ${{ secrets.NPM_TOKEN != '' }}
+      RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', inputs.version) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: attach assets to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          target=()
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            gh release delete "${RELEASE_TAG}" --yes --cleanup-tag 2>/dev/null || true
+            git push origin ":refs/tags/${RELEASE_TAG}" 2>/dev/null || true
+            target=(--target "${GITHUB_SHA}")
+          fi
+          notes="SwiftPM binaryTarget checksum: $(cat dist/apple/GossveilKit.checksum.txt)"
+          assets=(dist/android/gossveil-android-jniLibs.zip dist/apple/GossveilKit.xcframework.zip dist/web/*.tgz)
+          case "${RELEASE_TAG#v}" in *-*) target+=(--prerelease) ;; esac
+          gh release create "${RELEASE_TAG}" "${target[@]}" "${assets[@]}" --title "${RELEASE_TAG}" --notes "$notes"
+      # A SwiftPM consumer resolves the tag, so the pin lives in the commit the
+      # tag points at: rebuild the tag on a commit carrying the pinned manifest.
+      - name: pin the swift binary target in the release tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          checksum=$(cat dist/apple/GossveilKit.checksum.txt)
+          git config user.name avosa
+          git config user.email avosa.developer@gmail.com
+          tools/pin-swift-xcframework.sh "${RELEASE_TAG}" "${checksum}"
+          git add Package.swift
+          git commit -m "release ${RELEASE_TAG}: pin the swift xcframework binary target"
+          git tag -f "${RELEASE_TAG}" HEAD
+          git push -f origin "refs/tags/${RELEASE_TAG}"
+      - name: carry the pin onto main
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_PAT: ${{ secrets.RELEASE_PAT }}
+        run: |
+          set -euo pipefail
+          [ -n "${RELEASE_PAT:-}" ] || { echo "no RELEASE_PAT; the main pin is a follow-up pull request, the tag already carries it"; exit 0; }
+          git fetch origin main
+          git checkout -B main-pin origin/main
+          checksum=$(cat dist/apple/GossveilKit.checksum.txt)
+          tools/pin-swift-xcframework.sh "${RELEASE_TAG}" "${checksum}"
+          tools/stamp-doc-versions.sh "${RELEASE_TAG}"
+          git diff --quiet Package.swift README.md && { echo "main already current"; exit 0; }
+          git add Package.swift README.md
+          git commit -m "release ${RELEASE_TAG}: pin the swift xcframework and stamp the install docs"
+          if ! git push "https://x-access-token:${RELEASE_PAT}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main; then
+            branch="release-pin-${RELEASE_TAG}"
+            git push -f "https://x-access-token:${RELEASE_PAT}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${branch}"
+            gh pr view "${branch}" --json number >/dev/null 2>&1 || GH_TOKEN="${RELEASE_PAT}" gh pr create --base main --head "${branch}" \
+              --title "release ${RELEASE_TAG}: pin the swift xcframework and stamp the install docs" \
+              --body "The ${RELEASE_TAG} XCFramework pin and the install-doc versions, carried onto main. The tag already serves consumers; this keeps a reader of main current."
+          fi
+      - name: set up jdk 21 for gradle
+        if: ${{ env.HAS_MAVEN == 'true' }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: set up the android sdk for gradle
+        if: ${{ env.HAS_MAVEN == 'true' }}
+        uses: android-actions/setup-android@v3
+      - name: publish to maven central
+        if: ${{ env.HAS_MAVEN == 'true' }}
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.OSSRH_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.OSSRH_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          set -euo pipefail
+          mkdir -p zig-out/android
+          unzip -o dist/android/gossveil-android-jniLibs.zip -d zig-out/android
+          cd sdk/kotlin
+          ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache -PVERSION_NAME="${RELEASE_TAG#v}"
+      - name: publish to npm
+        if: ${{ env.HAS_NPM == 'true' }}
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+          tag=latest
+          case "${RELEASE_TAG#v}" in *-*) tag=next ;; esac
+          npm publish --access public --provenance --tag "$tag" dist/web/*.tgz

@@ -1,0 +1,9 @@
+# Builds io.github.avosa:gossveil from a tagged commit for consumers who resolve
+# it over JitPack: the native core first, then the AAR. Maven Central carries
+# the prebuilt AAR and is the recommended route.
+jdk:
+  - openjdk21
+install:
+  - tools/toolchain-sync
+  - export PATH="$PWD/.local/zig/current:$PATH" && zig build android -Doptimize=ReleaseFast
+  - cd sdk/kotlin && ./gradlew publishToMavenLocal

@@ -1,0 +1,9 @@
+#!/bin/sh
+# The source gate over the staged files, before every commit.
+set -e
+root="$(git rev-parse --show-toplevel)"
+zig="$root/.local/zig/current/zig"
+[ -x "$zig" ] || zig="$zig.exe"
+[ -x "$zig" ] || zig=zig
+cd "$root"
+exec "$zig" build gate -- --staged
