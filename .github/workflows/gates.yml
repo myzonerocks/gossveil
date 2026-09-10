@@ -122,9 +122,9 @@ jobs:
           distribution: temurin
           java-version: "21"
       - name: jni libraries
-        run: zig build jni android -Doptimize=ReleaseFast
-        env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
+        run: |
+          export ANDROID_NDK_HOME="${ANDROID_NDK_HOME:-$ANDROID_NDK_LATEST_HOME}"
+          zig build jni android -Doptimize=ReleaseFast
       - name: kotlin tests and aar
         working-directory: sdk/kotlin
         run: ./gradlew :lib:testDebugUnitTest :lib:assembleRelease --console=plain

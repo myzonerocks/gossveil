@@ -40,9 +40,9 @@ jobs:
           tools/toolchain-sync
           echo "$PWD/.local/zig/current" >> "$GITHUB_PATH"
       - name: build android libraries
-        run: zig build android -Doptimize=ReleaseFast
-        env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
+        run: |
+          export ANDROID_NDK_HOME="${ANDROID_NDK_HOME:-$ANDROID_NDK_LATEST_HOME}"
+          zig build android -Doptimize=ReleaseFast
       # 16 KB page alignment is a Play gate on arm64; the JNI entry the Kotlin
       # package binds must be exported.
       - name: alignment and symbol gates
