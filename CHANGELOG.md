@@ -7,6 +7,8 @@ A release moves that section under its tag with the date, and the release notes 
 
 - A local publish of the Android package names the released version, so a sibling checkout and a
   client that asks for it agree on the coordinate.
+- The Android and JNI lanes find the JDK and the SDK where a machine keeps them, so the
+  documented build line runs with nothing exported.
 
 ## v0.1.0-alpha.2 (2026-09-10)
 
