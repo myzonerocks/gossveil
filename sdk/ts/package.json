@@ -1,0 +1,34 @@
+{
+  "name": "@myzonerocks/gossveil",
+  "version": "0.1.0-alpha.1",
+  "description": "Sessions, groups, sealed envelopes and safety numbers for the browser and Node, over a wasm core",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./wasm": "./wasm/gossveil.wasm"
+  },
+  "files": [
+    "dist",
+    "wasm/gossveil.wasm"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "bun run build:core && bun run build:js && bun run build:types",
+    "build:core": "cd ../.. && zig build wasm -Doptimize=ReleaseFast && mkdir -p sdk/ts/wasm && cp zig-out/wasm/gossveil.wasm sdk/ts/wasm/gossveil.wasm",
+    "build:js": "bun build src/index.ts --outdir dist --target browser --format esm --sourcemap=external",
+    "build:types": "tsc -p tsconfig.json --emitDeclarationOnly",
+    "test": "bun test",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.0",
+    "typescript": "^5.6.0"
+  }
+}

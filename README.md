@@ -116,7 +116,7 @@ try processPreKeyBundle(
     context: NullContext()
 )
 
-let sealed = try signalEncrypt(
+let sealed = try sessionEncrypt(
     message: plaintext,
     for: peer,
     localAddress: me,
@@ -180,7 +180,7 @@ zig build ci                                  # unit tests, the frozen vectors, 
 zig build conformance                         # replay the frozen wire vectors
 tools/build-xcframework.sh && swift test      # the Swift package
 zig build wasm -Doptimize=ReleaseFast && (cd sdk/ts && bun run build && bun test)
-zig build jni android -Doptimize=ReleaseFast && (cd sdk/kotlin && ./gradlew :lib:test :lib:assembleRelease)
+zig build jni android -Doptimize=ReleaseFast && (cd sdk/kotlin && ./gradlew :lib:testDebugUnitTest :lib:assembleRelease)
 ```
 
 ## Not included
