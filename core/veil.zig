@@ -61,6 +61,19 @@ pub const post = struct {
     pub const whisper = @import("post/whisper.zig");
     pub const Whisper = whisper.Whisper;
     pub const Opener = @import("post/opener.zig").Opener;
+    pub const content = @import("post/content.zig");
+    pub const Plain = content.Plain;
+    pub const Report = @import("post/report.zig").Report;
+};
+
+pub const envelope = struct {
+    pub const certificate = @import("envelope/certificate.zig");
+    pub const ServerCert = certificate.ServerCert;
+    pub const SenderCert = certificate.SenderCert;
+    pub const content = @import("envelope/content.zig");
+    pub const Content = content.Content;
+    pub const seal = @import("envelope/seal.zig");
+    pub const multiseal = @import("envelope/multiseal.zig");
 };
 
 pub const ident = struct {
@@ -81,4 +94,5 @@ test {
     std.testing.refAllDecls(handshake);
     std.testing.refAllDecls(post);
     std.testing.refAllDecls(circle);
+    std.testing.refAllDecls(envelope);
 }
