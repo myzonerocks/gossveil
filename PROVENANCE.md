@@ -1,6 +1,8 @@
 # Provenance
 
-This project is an independent implementation.
+This project is an independent implementation of publicly specified protocols and is not a fork, 
+port, translation, modification, or derivative distribution of libsignal or any other protocol 
+implementation.
 
 Protocol behaviour was developed from the publicly available protocol specifications and
 cryptographic standards, and checked against wire vectors recorded by this project's own tooling.

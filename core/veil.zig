@@ -32,6 +32,7 @@ pub const ratchet = struct {
     pub const state = @import("ratchet/state.zig");
     pub const State = state.State;
     pub const Archive = @import("ratchet/archive.zig").Archive;
+    pub const engine = @import("ratchet/engine.zig");
     pub const pq = struct {
         pub const field = @import("ratchet/pq/field.zig");
         pub const code = @import("ratchet/pq/code.zig");
@@ -46,6 +47,12 @@ pub const ratchet = struct {
 
 pub const handshake = struct {
     pub const agree = @import("handshake/agree.zig");
+};
+
+pub const post = struct {
+    pub const whisper = @import("post/whisper.zig");
+    pub const Whisper = whisper.Whisper;
+    pub const Opener = @import("post/opener.zig").Opener;
 };
 
 pub const ident = struct {
@@ -64,4 +71,5 @@ test {
     std.testing.refAllDecls(ratchet);
     std.testing.refAllDecls(ratchet.pq);
     std.testing.refAllDecls(handshake);
+    std.testing.refAllDecls(post);
 }
