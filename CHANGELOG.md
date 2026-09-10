@@ -5,6 +5,8 @@ A release moves that section under its tag with the date, and the release notes 
 
 ## Unreleased
 
+## v0.1.0-alpha.1 (2026-09-10)
+
 - The core protocol: keys, published records, the ratchet with its post-quantum braid, circles,
   sealed envelopes, safety numbers, handles, the vault and chunked stream authentication.
 - The C ABI (`gv_*`), the wasm root, the JNI entry, the C example and the conformance command
