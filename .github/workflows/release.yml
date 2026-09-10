@@ -139,7 +139,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      HAS_MAVEN: ${{ secrets.OSSRH_USERNAME != '' }}
+      # Central refuses an unsigned artifact, so the lane needs the key as much as the account.
+      HAS_MAVEN: ${{ secrets.OSSRH_USERNAME != '' && secrets.SIGNING_KEY != '' }}
       HAS_NPM: ${{ secrets.NPM_TOKEN != '' }}
       RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', inputs.version) }}
     steps:
