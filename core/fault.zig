@@ -1,0 +1,23 @@
+//! The error set every area shares. A fault names what the caller can act on,
+//! never where in the code it happened.
+pub const Fault = error{
+    BadArgument,
+    BadState,
+    BadKey,
+    BadSignature,
+    BadMessage,
+    UnknownKeyId,
+    UnknownKeyType,
+    BadText,
+    LegacyVersion,
+    UnknownVersion,
+    Replay,
+    UntrustedIdentity,
+    NoSession,
+    BadSession,
+    VerifyFailed,
+    BadPadding,
+    OutOfMemory,
+    Overflow,
+    Unsupported,
+};

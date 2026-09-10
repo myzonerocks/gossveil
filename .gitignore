@@ -3,7 +3,9 @@
 /*
 !/.gitattributes
 !/.githooks/
+!/.githooks/**
 !/.github/
+!/.github/**
 !/.gitignore
 !/.zigversion
 !/CONTRIBUTING.md
@@ -17,14 +19,23 @@
 !/flake.nix
 !/flake.lock
 !/jitpack.yml
+!/abi/
 !/abi/**
+!/conformance/
 !/conformance/**
+!/core/
 !/core/**
+!/docs/
 !/docs/**
+!/examples/
 !/examples/**
+!/include/
 !/include/**
+!/nix/
 !/nix/**
+!/sdk/
 !/sdk/**
+!/tools/
 !/tools/**
 
 # Private notes never enter history.
