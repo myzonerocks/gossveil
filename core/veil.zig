@@ -76,6 +76,29 @@ pub const envelope = struct {
     pub const multiseal = @import("envelope/multiseal.zig");
 };
 
+pub const trust = struct {
+    pub const safety = @import("trust/safety.zig");
+    pub const Safety = safety.Safety;
+};
+
+pub const handle = struct {
+    pub const Sponge = @import("handle/sponge.zig").Sponge;
+    pub const name = @import("handle/name.zig");
+    pub const Handle = name.Handle;
+    pub const link = @import("handle/link.zig");
+};
+
+pub const vault = struct {
+    pub const account = @import("vault/account.zig");
+    pub const EntropyPool = account.EntropyPool;
+    pub const BackupKey = account.BackupKey;
+    pub const circle_params = @import("vault/circle_params.zig");
+};
+
+pub const stream = struct {
+    pub const chunkmac = @import("stream/chunkmac.zig");
+};
+
 pub const ident = struct {
     pub const Uuid = @import("ident/uuid.zig").Uuid;
     pub const service = @import("ident/service.zig");
@@ -95,4 +118,8 @@ test {
     std.testing.refAllDecls(post);
     std.testing.refAllDecls(circle);
     std.testing.refAllDecls(envelope);
+    std.testing.refAllDecls(trust);
+    std.testing.refAllDecls(handle);
+    std.testing.refAllDecls(vault);
+    std.testing.refAllDecls(stream);
 }
