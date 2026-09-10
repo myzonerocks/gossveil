@@ -16,3 +16,5 @@ A release moves that section under its tag with the date, and the release notes 
   vectors carry the same names.
 - The web package ships unbundled ES modules built by the TypeScript compiler, so a consumer
   imports what the sources declare; a test imports the built package and exercises it.
+- The web package's Node-only file read is named at run time, so a browser bundler never pulls
+  `node:fs/promises` or `node:url` into an application's graph.

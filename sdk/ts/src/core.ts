@@ -99,6 +99,11 @@ function defaultLocation(): URL {
   return new URL('../wasm/gossveil.wasm', import.meta.url)
 }
 
+/** A built specifier, so only a runtime with these modules ever resolves them. */
+function nodeSpecifier(name: string): string {
+  return 'node:' + name
+}
+
 async function loadSource(input: InitInput | undefined): Promise<BufferSource | WebAssembly.Module | Response> {
   if (input === undefined) input = defaultLocation()
   if (input instanceof WebAssembly.Module || ArrayBuffer.isView(input) || input instanceof ArrayBuffer) return input
@@ -106,8 +111,9 @@ async function loadSource(input: InitInput | undefined): Promise<BufferSource | 
   const url = input instanceof URL ? input : typeof input === 'string' ? new URL(input, import.meta.url) : null
   const node = typeof (globalThis as { process?: { versions?: { node?: string } } }).process?.versions?.node === 'string'
   if (url && url.protocol === 'file:' && node) {
-    const { readFile } = await import('node:fs/promises')
-    const { fileURLToPath } = await import('node:url')
+    // Named at run time so a browser bundler never follows these into the graph.
+    const { readFile } = await import(/* @vite-ignore */ nodeSpecifier('fs/promises'))
+    const { fileURLToPath } = await import(/* @vite-ignore */ nodeSpecifier('url'))
     return await readFile(fileURLToPath(url))
   }
   return await fetch(input as RequestInfo | URL)
