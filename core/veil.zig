@@ -49,6 +49,14 @@ pub const handshake = struct {
     pub const agree = @import("handshake/agree.zig");
 };
 
+pub const circle = struct {
+    pub const chain = @import("circle/chain.zig");
+    pub const record = @import("circle/record.zig");
+    pub const Circle = record.Circle;
+    pub const post = @import("circle/post.zig");
+    pub const cipher = @import("circle/cipher.zig");
+};
+
 pub const post = struct {
     pub const whisper = @import("post/whisper.zig");
     pub const Whisper = whisper.Whisper;
@@ -72,4 +80,5 @@ test {
     std.testing.refAllDecls(ratchet.pq);
     std.testing.refAllDecls(handshake);
     std.testing.refAllDecls(post);
+    std.testing.refAllDecls(circle);
 }

@@ -10,10 +10,10 @@ The architecture the code follows is this project's own and is written down in
 [docs/DESIGN.md](docs/DESIGN.md) before the code that implements it.
 
 No source code from any other implementation was incorporated, translated, ported or modified.
-All implementation code, tests, documentation and build tooling in this repository were independently 
-authored for this project or contributed under terms compatible with the Apache License, Version 2.0. 
-The one dependency is the Zig standard library, a permissively licensed standard library whose 
-notice is in [NOTICE.md](NOTICE.md).
+All implementation code, tests, documentation and build tooling in this repository were 
+independently authored for this project or contributed under the Apache License, Version 2.0. 
+The only external code used by the implementation is the Zig standard library, a permissively 
+licensed standard library whose notice is in [NOTICE.md](NOTICE.md).
 
 Where two implementations of the same protocol must agree, they agree on bytes: key encodings,
 record layouts, message framing and key schedules are fixed by the protocol, and the names of
