@@ -20,10 +20,9 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "bun run build:core && bun run build:js && bun run build:types",
+    "build": "bun run build:core && bun run build:js",
     "build:core": "cd ../.. && zig build wasm -Doptimize=ReleaseFast && mkdir -p sdk/ts/wasm && cp zig-out/wasm/gossveil.wasm sdk/ts/wasm/gossveil.wasm",
-    "build:js": "bun build src/index.ts --outdir dist --target browser --format esm --sourcemap=external",
-    "build:types": "tsc -p tsconfig.json --emitDeclarationOnly",
+    "build:js": "tsc -p tsconfig.json",
     "test": "bun test",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

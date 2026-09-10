@@ -1,8 +1,8 @@
 // Typed calls into the core. A Call gathers inputs, scalars, output cells and
 // pads in argument order, runs one export, copies every output out and frees
 // everything before returning.
-import { In, Out, Pad, check, invoke, textDecoder } from './core'
-import type { Arg } from './core'
+import { In, Out, Pad, check, invoke, textDecoder } from './core.js'
+import type { Arg } from './core.js'
 
 class Call {
   readonly #name: string
@@ -81,8 +81,10 @@ class Call {
 
 export const PQ_ROUND_THREE = 0x08
 export const PQ_STANDARD = 0x0a
-export const KEM_KYBER1024 = PQ_ROUND_THREE
-export const KEM_MLKEM1024 = PQ_STANDARD
+// The names the clients used before the rename, each its own value so a bundler
+// never has to alias one export to another.
+export const KEM_KYBER1024 = 0x08
+export const KEM_MLKEM1024 = 0x0a
 
 export const MessageType = { whisper: 2, preKey: 3, senderKey: 7, plaintext: 8 } as const
 

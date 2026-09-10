@@ -1,9 +1,9 @@
 // The record-shaped API: keys, records, store interfaces a host implements,
 // and the protocol operations over them. Every object holds plain bytes.
-import { core, MessageType, PQ_ROUND_THREE } from './bridge'
-import type { Binding } from './bridge'
-import { GossveilError, bytesEqual, fault, utf8 } from './core'
-import { uuidToBytes, bytesToUuid } from './uuid'
+import { core, PQ_ROUND_THREE } from './bridge.js'
+import type { Binding } from './bridge.js'
+import { GossveilError, bytesEqual, fault, utf8 } from './core.js'
+import { uuidToBytes, bytesToUuid } from './uuid.js'
 
 function nowSecs(date: Date = new Date()): bigint {
   return BigInt(Math.max(0, Math.floor(date.getTime() / 1000)))
@@ -725,10 +725,6 @@ export class PreKeyMessage {
 
   whisperMessage(): WhisperMessage {
     return WhisperMessage.deserialize(this.#inner)
-  }
-
-  signalMessage(): WhisperMessage {
-    return this.whisperMessage()
   }
 }
 
@@ -1699,4 +1695,3 @@ export function abiVersion(): number {
   return core.abiVersion()
 }
 
-export { MessageType }

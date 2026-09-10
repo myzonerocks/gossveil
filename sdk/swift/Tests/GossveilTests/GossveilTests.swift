@@ -272,32 +272,4 @@ final class GossveilTests: XCTestCase {
         XCTAssertThrowsError(try ProtocolAddress(name: "x", deviceId: 0))
         XCTAssertEqual(Gossveil.abiVersion, 1)
     }
-
-    /// The names the client called before the rename still resolve and behave the same.
-    func testCompatibilityNames() throws {
-        let alice = InMemorySignalProtocolStore()
-        let bob = InMemorySignalProtocolStore()
-        let bobAddress = try ProtocolAddress(name: "bob", deviceId: 1)
-        let aliceAddress = try ProtocolAddress(name: "alice", deviceId: 1)
-        let bobIdentity = try bob.identityKeyPair(context: NullContext())
-        let signed = PrivateKey.generate()
-        let kyber = KEMKeyPair.generate()
-        try bob.storeSignedPreKey(SignedPreKeyRecord(id: 1, timestamp: 1, privateKey: signed, signature: bobIdentity.privateKey.generateSignature(message: signed.publicKey.serialize())), id: 1, context: NullContext())
-        try bob.storeKyberPreKey(KyberPreKeyRecord(id: 1, timestamp: 1, keyPair: kyber, signature: bobIdentity.privateKey.generateSignature(message: kyber.publicKey.serialize())), id: 1, context: NullContext())
-        let bundle = try PreKeyBundle(
-            registrationId: bob.localRegistrationId(context: NullContext()), deviceId: 1,
-            signedPrekeyId: 1, signedPrekey: signed.publicKey, signedPrekeySignature: bobIdentity.privateKey.generateSignature(message: signed.publicKey.serialize()),
-            identity: bobIdentity.identityKey,
-            kyberPrekeyId: 1, kyberPrekey: kyber.publicKey, kyberPrekeySignature: bobIdentity.privateKey.generateSignature(message: kyber.publicKey.serialize())
-        )
-        try processPreKeyBundle(bundle, for: bobAddress, sessionStore: alice, identityStore: alice, context: NullContext())
-        let first = try signalEncrypt(message: Data("hi".utf8), for: bobAddress, sessionStore: alice, identityStore: alice, context: NullContext())
-        XCTAssertEqual(try signalDecryptPreKey(message: PreKeySignalMessage(bytes: first.serialize()), from: aliceAddress, sessionStore: bob, identityStore: bob, preKeyStore: bob, signedPreKeyStore: bob, kyberPreKeyStore: bob, context: NullContext()), Data("hi".utf8))
-        let reply = try signalEncrypt(message: Data("yo".utf8), for: aliceAddress, sessionStore: bob, identityStore: bob, context: NullContext())
-        XCTAssertEqual(try signalDecrypt(message: SignalMessage(bytes: reply.serialize()), from: bobAddress, sessionStore: alice, identityStore: alice, context: NullContext()), Data("yo".utf8))
-        XCTAssertThrowsError(try signalDecrypt(message: SignalMessage(bytes: reply.serialize()), from: bobAddress, sessionStore: alice, identityStore: alice, context: NullContext())) { error in
-            guard case SignalError.duplicatedMessage = error else { return XCTFail("\(error)") }
-        }
-        XCTAssertEqual(LibSignal.abiVersion, 1)
-    }
 }

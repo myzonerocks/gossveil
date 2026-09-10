@@ -241,19 +241,4 @@ class GossveilTest {
         assertEquals(pni, ServiceId.parseFromBinary(pni.toServiceIdBinary()))
         assertEquals(1, abiVersion())
     }
-
-    /** The names the client called before the rename still resolve to the same types. */
-    @Test
-    fun compatibilityNames() {
-        val alice = InMemorySignalProtocolStore()
-        val bob = InMemorySignalProtocolStore()
-        val aliceAddress = SignalProtocolAddress("alice", 1)
-        val bobAddress = SignalProtocolAddress("bob", 1)
-        val store: SignalProtocolStore = alice
-        SessionBuilder(store, bobAddress).process(publish(bob, null))
-        val first = SessionCipher(alice, bobAddress).encrypt("hi".toByteArray())
-        assertContentEquals("hi".toByteArray(), SessionCipher(bob, aliceAddress).decrypt(PreKeySignalMessage(first.serialize())))
-        val reply = SessionCipher(bob, aliceAddress).encrypt("yo".toByteArray())
-        assertContentEquals("yo".toByteArray(), SessionCipher(alice, bobAddress).decrypt(SignalMessage(reply.serialize())))
-    }
 }

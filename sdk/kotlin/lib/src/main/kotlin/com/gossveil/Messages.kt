@@ -50,8 +50,6 @@ class PreKeyMessage private constructor(private val bytes: ByteArray, reply: Rep
     val baseKey: ECPublicKey get() = ECPublicKey(info.bytes(32, 33), true)
     val identityKey: IdentityKey get() = IdentityKey(ECPublicKey(info.bytes(65, 33), true))
     val whisperMessage: WhisperMessage get() = WhisperMessage(inner)
-    val signalMessage: WhisperMessage get() = whisperMessage
-
     override val type: Int get() = CiphertextMessage.PREKEY_TYPE
 
     override fun serialize(): ByteArray = bytes.copyOf()

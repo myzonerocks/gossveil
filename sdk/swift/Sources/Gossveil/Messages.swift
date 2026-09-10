@@ -100,8 +100,6 @@ public final class PreKeyMessage: Sendable {
         whisperMessage = try WhisperMessage(bytes: Core.take(&inner))
     }
 
-    public var signalMessage: WhisperMessage { whisperMessage }
-
     public func serialize() -> Data {
         Data(bytes)
     }

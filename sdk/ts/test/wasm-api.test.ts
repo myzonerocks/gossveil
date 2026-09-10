@@ -35,7 +35,6 @@ import init, {
   generate_random_bytes,
   generate_attachment_key,
   message_type_pre_key,
-  message_type_signal,
   message_type_whisper,
   message_type_sender_key,
   GossveilError,
@@ -202,7 +201,6 @@ describe('the web client flow', () => {
     expect(await decrypt(bob, alice, second)).toBe('again')
     const reply = await encrypt(bob, alice, 'hi alice')
     expect(reply[0]).toBe(message_type_whisper())
-    expect(message_type_signal()).toBe(message_type_whisper())
     expect(await decrypt(alice, bob, reply)).toBe('hi alice')
     const third = await encrypt(alice, bob, 'ratcheted')
     expect(third[0]).toBe(message_type_whisper())

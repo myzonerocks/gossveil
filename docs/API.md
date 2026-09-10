@@ -92,22 +92,6 @@ Errors: `GossveilError` (Swift enum), the typed exceptions in the Kotlin package
 | Primitives | `hkdf`, `Aes256GcmSiv`, `IncrementalMac`, `randomBytes`, `KEM.encapsulate/decapsulate` | `HKDF`, `Aes256GcmSiv`, `IncrementalMac`, `randomBytes`, `KEMPublicKey.encapsulate`, `KEMSecretKey.decapsulate` | `hkdf`, `Aes256GcmSiv`, `IncrementalMac`, `randomBytes` / `generate_random_bytes`, `generate_attachment_key`, `generate_uuid`, `uuid_from_string`, `uuid_to_string`, `generateRegistrationId` |
 | Content framing | `DecryptionErrorMessage`, `PlaintextContent` | `DecryptionErrorMessage`, `PlaintextContent` | `DecryptionErrorMessage`, `PlaintextContent` |
 
-## Names kept for the clients
-
-Each package keeps the names the clients called before the rename. They are the gossveil
-types under a second name, not a second implementation.
-
-| Kept name | Gossveil name |
-|---|---|
-| `SignalError` (Swift, TypeScript) | `GossveilError` |
-| `SignalMessage` | `WhisperMessage` |
-| `PreKeySignalMessage` | `PreKeyMessage` |
-| `InMemorySignalProtocolStore` | `InMemoryProtocolStore` |
-| `SignalProtocolAddress`, `SignalProtocolStore` (Kotlin) | `ProtocolAddress`, `ProtocolStore` |
-| `signalEncrypt`, `signalDecrypt`, `signalDecryptPreKey` (Swift, TypeScript) | `sessionEncrypt`, `sessionDecrypt`, `sessionDecryptPreKey` |
-| `LibSignal.abiVersion` (Swift) | `Gossveil.abiVersion` |
-| `message_type_signal()` (TypeScript) | `message_type_whisper()` |
-
 ## The C ABI
 
 `include/gossveil.h`. Every function returns `int32_t` (`GV_OK` is 0); byte inputs are

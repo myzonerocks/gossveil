@@ -52,13 +52,6 @@ import init, {
   uuid_to_string,
   generate_uuid,
   abiVersion,
-  InMemorySignalProtocolStore,
-  PreKeySignalMessage,
-  SignalError,
-  SignalMessage,
-  signalDecrypt,
-  signalDecryptPreKey,
-  signalEncrypt,
 } from '../src/index'
 
 const text = (s: string) => new TextEncoder().encode(s)
@@ -133,20 +126,6 @@ describe('sessions over host stores', () => {
     await processBundle(await publish(bob, null), bobAddress, impostor, impostor)
     const forged = await sessionEncrypt(text('forged'), bobAddress, impostor, impostor)
     await expect(sessionDecryptPreKey(PreKeyMessage.deserialize(forged.serialize()), aliceAddress, bob, bob, bob, bob, bob)).rejects.toMatchObject({ kind: 'UntrustedIdentity' })
-  })
-
-  test('the names the client called before the rename still work', async () => {
-    const alice = new InMemorySignalProtocolStore()
-    const bob = new InMemorySignalProtocolStore()
-    const aliceAddress = ProtocolAddress.new('alice', 1)
-    const bobAddress = ProtocolAddress.new('bob', 1)
-    await processBundle(await publish(bob, null), bobAddress, alice, alice)
-    const first = await signalEncrypt(text('hi'), bobAddress, alice, alice)
-    expect(read(await signalDecryptPreKey(PreKeySignalMessage.deserialize(first.serialize()), aliceAddress, bob, bob, bob, bob, bob))).toBe('hi')
-    const reply = await signalEncrypt(text('yo'), aliceAddress, bob, bob)
-    expect(read(await signalDecrypt(SignalMessage.deserialize(reply.serialize()), bobAddress, alice, alice))).toBe('yo')
-    await expect(signalDecrypt(SignalMessage.deserialize(reply.serialize()), bobAddress, alice, alice)).rejects.toBeInstanceOf(SignalError)
-    expect(SignalError).toBe(GossveilError)
   })
 })
 

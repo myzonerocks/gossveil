@@ -2,9 +2,9 @@
 // export records, session and group operations, safety numbers, group
 // parameters and the small helpers. Objects hold plain bytes, so `free()`
 // only drops references and nothing dangles after a constructor.
-import { core, MessageType, PQ_ROUND_THREE } from './bridge'
-import { GossveilError, bytesEqual, fault, isReady, utf8 } from './core'
-import { uuidToBytes, bytesToUuid } from './uuid'
+import { core, MessageType, PQ_ROUND_THREE } from './bridge.js'
+import { GossveilError, bytesEqual, fault, isReady, utf8 } from './core.js'
+import { uuidToBytes, bytesToUuid } from './uuid.js'
 
 // Older runtimes lack Symbol.dispose; the same well-known name keeps `using` working.
 ;(Symbol as { dispose?: symbol }).dispose ??= Symbol.for('Symbol.dispose')
@@ -776,10 +776,6 @@ export function message_type_sender_key(): number {
 }
 
 export function message_type_whisper(): number {
-  return MessageType.whisper
-}
-
-export function message_type_signal(): number {
   return MessageType.whisper
 }
 

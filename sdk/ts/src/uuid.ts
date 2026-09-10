@@ -1,5 +1,5 @@
 // UUID text and bytes, shared by both API shapes.
-import { fault } from './core'
+import { fault } from './core.js'
 
 export function uuidToBytes(s: string): Uint8Array {
   const hex = s.replace(/-/g, '')
