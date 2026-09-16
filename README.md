@@ -31,19 +31,19 @@ add a coordinate and never run a build step. On the web the package carries the 
 `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/myzonerocks/gossveil", from: "0.1.0-alpha.2")
+.package(url: "https://github.com/myzonerocks/gossveil", from: "0.1.0-alpha.3")
 ```
 
 **Android, Kotlin.**
 
 ```kotlin
-implementation("io.github.avosa:gossveil:0.1.0-alpha.2")
+implementation("io.github.avosa:gossveil:0.1.0-alpha.3")
 ```
 
 **Web, TypeScript.**
 
 ```sh
-bun add @myzonerocks/gossveil@0.1.0-alpha.2
+bun add @myzonerocks/gossveil@0.1.0-alpha.3
 ```
 
 Then write the first session with the guide for your platform:

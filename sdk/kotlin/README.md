@@ -14,7 +14,7 @@ started on one platform continues on another. The full cross-language name table
 
 ```kotlin
 // build.gradle.kts
-implementation("io.github.avosa:gossveil:0.1.0-alpha.2")
+implementation("io.github.avosa:gossveil:0.1.0-alpha.3")
 ```
 
 From Maven Central, which needs no repository entry beyond the one an Android project already has:
@@ -39,7 +39,7 @@ was never published, or a fork:
 repositories { maven { url = uri("https://jitpack.io") } }
 
 // build.gradle.kts
-implementation("com.github.myzonerocks:gossveil:v0.1.0-alpha.2")
+implementation("com.github.myzonerocks:gossveil:v0.1.0-alpha.3")
 ```
 
 ### Building from source
@@ -58,7 +58,7 @@ AAR ships. To point an app at a checkout instead of the registry, publish it loc
 repository:
 
 ```sh
-(cd sdk/kotlin && ./gradlew publishToMavenLocal -PVERSION_NAME=0.1.0-alpha.2)
+(cd sdk/kotlin && ./gradlew publishToMavenLocal -PVERSION_NAME=0.1.0-alpha.3)
 ```
 
 ```kotlin

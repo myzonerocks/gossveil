@@ -21,7 +21,7 @@ https://github.com/myzonerocks/gossveil
 In a `Package.swift`, name the version you want:
 
 ```swift
-.package(url: "https://github.com/myzonerocks/gossveil", from: "0.1.0-alpha.2")
+.package(url: "https://github.com/myzonerocks/gossveil", from: "0.1.0-alpha.3")
 ```
 
 Two products come with it. `Gossveil` is the one every app wants. Add `GossveilKit` as well only
