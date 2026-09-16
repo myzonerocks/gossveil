@@ -5,6 +5,8 @@ A release moves that section under its tag with the date, and the release notes 
 
 ## Unreleased
 
+## v0.1.0-alpha.3 (2026-09-16)
+
 - The npm package's source maps carry their sources. They pointed at a `src` folder the
   tarball never held, so every consumer's dev server warned about missing files on start.
 
