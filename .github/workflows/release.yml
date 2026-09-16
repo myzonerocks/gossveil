@@ -244,6 +244,9 @@ jobs:
           java-version: "21"
       - name: set up the android sdk for gradle
         uses: android-actions/setup-android@v3
+        with:
+          accept-android-sdk-licenses: true
+          log-accepted-android-sdk-licenses: false
       - name: publish to maven central
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.OSSRH_USERNAME }}
