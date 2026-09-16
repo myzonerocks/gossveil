@@ -5,6 +5,9 @@ A release moves that section under its tag with the date, and the release notes 
 
 ## Unreleased
 
+- The npm package's source maps carry their sources. They pointed at a `src` folder the
+  tarball never held, so every consumer's dev server warned about missing files on start.
+
 - The C ABI ships as a package of its own: `zig build c` stages the header beside a shared
   library and a static archive, with a guide, a CMake import and the example beside them.
 
