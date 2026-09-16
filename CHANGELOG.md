@@ -5,6 +5,7 @@ A release moves that section under its tag with the date, and the release notes 
 
 ## Unreleased
 
+- The Android lane retries a Gradle distribution download the server fails, instead of failing the run on one bad answer.
 ## v0.1.0-alpha.3 (2026-09-16)
 
 - The npm package's source maps carry their sources. They pointed at a `src` folder the
