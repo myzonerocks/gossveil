@@ -151,6 +151,9 @@ pub fn build(b: *std.Build) void {
 
     const ndk = named(b.option([]const u8, "ndk", "Android NDK root (default: $ANDROID_NDK_HOME, else the newest under the SDK)")) orelse
         named(b.graph.environ_map.get("ANDROID_NDK_HOME")) orelse newestNdk(b);
+    // The oldest Android the app supports: its libc is forwards compatible, so one stub serves
+    // every newer device, and linking against a newer one would refuse to load on an older phone.
+    const android_api = "26";
     const android_step = b.step("android", "Build the JNI shared library for arm64-v8a and x86_64");
     if (ndk) |root| {
         const host_tag = switch (builtin.os.tag) {
@@ -158,16 +161,22 @@ pub fn build(b: *std.Build) void {
             .windows => "windows-x86_64",
             else => "linux-x86_64",
         };
-        const sysroot_include = b.pathJoin(&.{ root, "toolchains", "llvm", "prebuilt", host_tag, "sysroot", "usr", "include" });
-        const abis = [_]struct { dir: []const u8, arch: std.Target.Cpu.Arch }{
-            .{ .dir = "arm64-v8a", .arch = .aarch64 },
-            .{ .dir = "x86_64", .arch = .x86_64 },
+        const sysroot = b.pathJoin(&.{ root, "toolchains", "llvm", "prebuilt", host_tag, "sysroot", "usr" });
+        const sysroot_include = b.pathJoin(&.{ sysroot, "include" });
+        const abis = [_]struct { dir: []const u8, arch: std.Target.Cpu.Arch, triple: []const u8 }{
+            .{ .dir = "arm64-v8a", .arch = .aarch64, .triple = "aarch64-linux-android" },
+            .{ .dir = "x86_64", .arch = .x86_64, .triple = "x86_64-linux-android" },
         };
         for (abis) |abi| {
             const abi_target = b.resolveTargetQuery(.{ .cpu_arch = abi.arch, .os_tag = .linux, .abi = .android });
+            // Android's linker resolves nothing a library has not asked for: without libc the
+            // standard library's one call into it, getauxval, stays undefined and the load fails.
             const lib = b.addLibrary(.{ .name = "gossveil_jni", .root_module = rootFor(b, "abi/jni.zig", abi_target, optimize, false), .linkage = .dynamic });
             lib.root_module.strip = optimize != .Debug;
             lib.root_module.addIncludePath(.{ .cwd_relative = sysroot_include });
+            // The NDK's own stub is linked rather than asking zig for a libc it cannot provide
+            // for this target: naming the file is what records the dependency the loader needs.
+            lib.root_module.addObjectFile(.{ .cwd_relative = b.pathJoin(&.{ sysroot, "lib", abi.triple, android_api, "libc.so" }) });
             android_step.dependOn(installInto(b, lib, b.pathJoin(&.{ "android", abi.dir })));
         }
     } else {
