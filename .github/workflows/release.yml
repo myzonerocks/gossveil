@@ -247,6 +247,10 @@ jobs:
         with:
           accept-android-sdk-licenses: true
           log-accepted-android-sdk-licenses: false
+          # Named rather than left to the action's default, which still asks for the long
+          # obsolete `tools` package: the image no longer carries it and the step dies there.
+          # Gradle fetches the platform and build tools it needs once the licences are accepted.
+          packages: platform-tools
       - name: publish to maven central
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.OSSRH_USERNAME }}
