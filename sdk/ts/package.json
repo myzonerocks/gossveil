@@ -1,6 +1,6 @@
 {
   "name": "@myzonerocks/gossveil",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.4",
   "description": "Sessions, groups, sealed envelopes and safety numbers for the browser and Node, over a wasm core",
   "license": "Apache-2.0",
   "repository": {
