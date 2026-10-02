@@ -5,9 +5,12 @@ A release moves that section under its tag with the date, and the release notes 
 
 ## Unreleased
 
+## v0.1.0-alpha.4 (2026-10-02)
+
 - The Android library loads on a device again. It referenced one symbol from the system C library and
   declared no dependency on it, so the loader refused it and every chat stayed offline.
 - The Android lane retries a Gradle distribution download the server fails, instead of failing the run on one bad answer.
+
 ## v0.1.0-alpha.3 (2026-09-16)
 
 - The npm package's source maps carry their sources. They pointed at a `src` folder the
