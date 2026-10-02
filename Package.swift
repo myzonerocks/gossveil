@@ -12,7 +12,7 @@ let kit: Target = FileManager.default.fileExists(atPath: localKit)
     : .binaryTarget(
         name: "GossveilKit",
         url: "https://github.com/myzonerocks/gossveil/releases/download/v0.1.0-alpha.4/GossveilKit.xcframework.zip",
-        checksum: "563b9a381c71afa8bb02e2f0f9eb800220a3ce2d1723060739b4fe2c3d38e2a2"
+        checksum: "35e141f6ab6417e6048560c896bce791e57d48bf05912163554319b9cd4671b5"
     )
 let package = Package(
     name: "Gossveil",
