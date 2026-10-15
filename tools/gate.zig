@@ -170,6 +170,28 @@ const Gate = struct {
         if (run > max_comment_block_lines) try g.flag("comment-hygiene: '{s}' ends with a {d}-line comment block; four lines at most", .{ path, run });
     }
 
+    /// Every owned tree carries its own re-include, so a personal global ignore file
+    /// can never quietly drop source this repository owns. The list is read off the
+    /// tree rather than written down, so a new directory is caught the day it lands.
+    fn checkIgnoreIntegrity(g: *Gate, paths: []const []const u8) !void {
+        const text = Io.Dir.cwd().readFileAlloc(g.io, ".gitignore", g.arena, .limited(max_file_scan_bytes)) catch {
+            try g.flag("ignore: .gitignore is missing at the repository root", .{});
+            return;
+        };
+        var seen: std.StringHashMapUnmanaged(void) = .empty;
+        for (paths) |path| {
+            const slash = std.mem.indexOfScalar(u8, path, '/') orelse continue;
+            const dir = path[0..slash];
+            if (dir.len == 0 or dir[0] == '.') continue;
+            if ((try seen.fetchPut(g.arena, dir, {})) != null) continue;
+            const rooted = try std.fmt.allocPrint(g.arena, "!/{s}/**", .{dir});
+            const bare = rooted[1..];
+            if (!hasLine(text, rooted) and !hasLine(text, bare)) {
+                try g.flag("ignore: owned tree '{s}' lacks a '{s}' re-include in .gitignore", .{ dir, rooted });
+            }
+        }
+    }
+
     fn trackedPaths(g: *Gate) ![][]const u8 {
         return g.splitZ(try g.git(&.{ "git", "ls-files", "-z" }));
     }
@@ -267,6 +289,18 @@ test "only shipped paths ask for a changelog line" {
     try std.testing.expect(!shipsToUsers("conformance/conform.zig"));
 }
 
+fn hasLine(text: []const u8, want: []const u8) bool {
+    var it = std.mem.splitScalar(u8, text, '\n');
+    while (it.next()) |line| if (std.mem.eql(u8, std.mem.trim(u8, line, " \t\r"), want)) return true;
+    return false;
+}
+
+test "a re-include is read whole, in either form" {
+    try std.testing.expect(hasLine("/*\n!/core/**\n", "!/core/**"));
+    try std.testing.expect(hasLine("!core/**\n", "!core/**"));
+    try std.testing.expect(!hasLine("!/core/**/x\n", "!/core/**"));
+}
+
 fn rot13(allocator: Allocator, text: []const u8) ![]u8 {
     const out = try allocator.alloc(u8, text.len);
     for (text, 0..) |ch, i| {
@@ -296,7 +330,9 @@ pub fn main(init: std.process.Init) !u8 {
     if (std.mem.eql(u8, mode, "--staged")) {
         for (try g.stagedPaths()) |p| try g.checkFile(p);
     } else if (std.mem.eql(u8, mode, "--tree")) {
-        for (try g.trackedPaths()) |p| try g.checkFile(p);
+        const tracked = try g.trackedPaths();
+        for (tracked) |p| try g.checkFile(p);
+        try g.checkIgnoreIntegrity(tracked);
     } else if (std.mem.eql(u8, mode, "--commit-msg") and args.len > 2) {
         const text = try Io.Dir.cwd().readFileAlloc(io, args[2], arena, .limited(max_file_scan_bytes));
         try g.checkMessage("the commit message", text);
