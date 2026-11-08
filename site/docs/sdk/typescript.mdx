@@ -1,0 +1,113 @@
+---
+title: TypeScript
+description: "The whole surface in a browser or in Node: the same core as wasm, with an async API over it."
+---
+
+The web package is the same core compiled to wasm, with a typed wrapper over
+it. Nothing is uploaded and no endpoint is called.
+
+## Install
+
+**bun**
+
+```bash
+bun add @myzonerocks/gossveil
+```
+
+**npm**
+
+```bash
+npm install @myzonerocks/gossveil
+```
+
+**pnpm**
+
+```bash
+pnpm add @myzonerocks/gossveil
+```
+
+## Sessions
+
+The session calls are async because the wasm module loads on first use.
+
+```ts
+import {
+  processBundle,
+  sessionEncrypt,
+  sessionDecrypt,
+  sessionDecryptPreKey,
+  InMemoryProtocolStore,
+} from '@myzonerocks/gossveil'
+
+const store = new InMemoryProtocolStore(identity, 1)
+
+await processBundle(bundle, address, store, store)
+
+const sealed = await sessionEncrypt(plaintext, address, store, store)
+const first = await sessionDecryptPreKey(preKeyMessage, address, store, store)
+const rest = await sessionDecrypt(whisperMessage, address, store, store)
+```
+
+## Circles
+
+```ts
+import { groupEncrypt, groupDecrypt, processSenderKeyDistributionMessage } from '@myzonerocks/gossveil'
+
+await processSenderKeyDistributionMessage(distribution, sender, store)
+const sealed = await groupEncrypt(plaintext, sender, distributionId, store)
+const opened = await groupDecrypt(sealed, sender, store)
+```
+
+## Sealed sender
+
+```ts
+import {
+  sealedSenderEncrypt,
+  sealedSenderEncryptMessage,
+  sealedSenderDecryptMessage,
+  sealedSenderDecryptToUsmc,
+  sealedSenderMultiRecipientEncrypt,
+  sealedSenderMultiRecipientMessageForSingleRecipient,
+} from '@myzonerocks/gossveil'
+
+const envelope = await sealedSenderEncryptMessage(content, address, senderCertificate, store, store)
+const result = await sealedSenderDecryptMessage(envelope, trustRoot, timestamp, localId, 1, store)
+```
+
+`sealedSenderDecryptToUsmc` stops a step earlier and hands back the
+unidentified-sender content. Use it when your app wants to make the trust
+decision itself.
+
+## Identity, fingerprints and the vault
+
+The classes carry the same names as the other SDKs:
+`IdentityKeyPair`, `PreKeyBundle`, `PreKeyRecord`, `KyberPreKeyRecord`,
+`SenderKeyRecord`, `Fingerprint`, `DisplayableFingerprint`, `BackupKey`,
+`GroupMasterKey`, `GroupSecretParams`, `Aci` and `Pni`.
+
+## Primitives
+
+```ts
+import { abiVersion, hkdf, randomBytes } from '@myzonerocks/gossveil'
+
+const version = abiVersion()
+const key = hkdf(32, ikm, salt, info)
+const bytes = randomBytes(32)
+```
+
+## What the browser costs you
+
+**Memory is the wasm heap.** Records are bytes crossing that boundary, so keep
+them as `Uint8Array` and avoid round-tripping through strings.
+
+**Freeing is explicit.** Objects backed by wasm memory are released when you
+dispose of them. Do that on the path that created them. Leave it to the
+collector and the heap grows across a long session.
+
+**One session at a time.** The core does no locking. Await each session call
+before starting the next for the same session, or two ratchet steps will race.
+
+## Errors
+
+Calls reject with `GossveilError`, which carries the status the core returned.
+See [errors](/docs/guides/errors).

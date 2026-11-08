@@ -1,0 +1,50 @@
+---
+title: Errors
+description: Every status the core can return, what it means, and what your app should do about it.
+---
+
+Every call returns a status. The SDKs turn it into an error in their own
+idiom, but the meanings are the same everywhere.
+
+| Status | What happened | What to do |
+| --- | --- | --- |
+| `GV_OK` | The call did what it said | Continue |
+| `GV_BAD_ARGUMENT` | A pointer, length or value did not make sense | Fix the caller; this is a bug |
+| `GV_BAD_STATE` | The operation does not apply to this state | Usually a missing step, such as sealing before a session exists |
+| `GV_BAD_KEY` | A key was malformed or not usable | Refuse the bundle; do not retry |
+| `GV_BAD_SIGNATURE` | A signature did not verify | Refuse it. Something signed wrongly or was tampered with |
+| `GV_BAD_MESSAGE` | The bytes are not a message of this kind | Drop it |
+| `GV_UNKNOWN_KEY_ID` | A message names a pre-key you no longer hold | Usually a late first message after the key was used |
+| `GV_UNTRUSTED_IDENTITY` | The identity key for that address changed | Stop and ask the user; this is a safety number change |
+| `GV_NO_SESSION` | No session for that address | The handshake has not happened, or arrived out of order |
+| `GV_REPLAY` | That message was already opened | Ignore it |
+| `GV_LEGACY_VERSION` | Older than this build understands | Tell the user to update the other end |
+| `GV_UNKNOWN_VERSION` | Newer than this build understands | Tell the user to update |
+| `GV_OUT_OF_MEMORY` | An allocation failed | Release what you can; fail the operation |
+| `GV_VERIFY_FAILED` | A check inside the operation failed | Treat as untrusted input |
+| `GV_INTERNAL` | A fault inside the core | Report it with what you were doing |
+
+A readable form is available for logs:
+
+```c
+const char *text = gv_status_text(status);
+```
+
+## The three worth handling by name
+
+**`GV_UNTRUSTED_IDENTITY`** is a product decision, not an error path. Somebody
+reinstalled, or somebody is in the middle, and your app cannot tell which. Show
+it. See [safety numbers](/docs/concepts/safety).
+
+**`GV_NO_SESSION`** is usually an ordering problem, not a failure. A message
+arrived before the handshake that explains it. Queueing briefly and retrying
+once is reasonable; retrying forever is not.
+
+**`GV_REPLAY`** is the protocol working. Do not surface it to a user, and do
+not retry.
+
+## What not to do
+
+Do not retry on `GV_BAD_SIGNATURE`, `GV_BAD_KEY` or `GV_BAD_MESSAGE`. Those
+describe the input, and the same input will fail the same way. A retry loop
+on untrusted input is a way to spend battery on an attacker's behalf.

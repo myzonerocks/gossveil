@@ -1,0 +1,111 @@
+---
+title: Kotlin
+description: "The whole surface on Android: stores, session builders and ciphers, circles, sealed sender and the vault."
+---
+
+The AAR carries the core for every ABI. The JNI layer is generated from the C
+header and holds no logic of its own.
+
+## Install
+
+```kotlin
+// build.gradle.kts
+implementation("io.github.avosa:gossveil:0.1.0-alpha.4")
+```
+
+## The stores you implement
+
+Your app owns storage. Implement the store interfaces against whatever your
+app already uses, and gossveil calls them.
+
+There's an identity store, a pre-key store, a signed pre-key store, a Kyber
+pre-key store, a session store and a sender-key store. An in-memory
+implementation ships for tests.
+
+## Sessions
+
+Kotlin follows the builder and cipher shape.
+
+```kotlin
+import com.gossveil.*
+
+val builder = SessionBuilder(store, address)
+builder.process(bundle)
+
+val cipher = SessionCipher(store, address)
+val sealed = cipher.encrypt("see you at six".toByteArray())
+```
+
+Opening, by message kind:
+
+```kotlin
+val first = cipher.decrypt(PreKeyMessage(bytes))
+val rest = cipher.decrypt(WhisperMessage(bytes))
+```
+
+Reading a session:
+
+```kotlin
+cipher.getSessionVersion()
+cipher.getRemoteRegistrationId()
+```
+
+## Circles
+
+```kotlin
+val groupBuilder = GroupSessionBuilder(store)
+val distribution = groupBuilder.create(sender, distributionId)
+groupBuilder.process(sender, distribution)
+
+val group = GroupCipher(store, sender)
+val sealed = group.encrypt(distributionId, plaintext)
+val opened = group.decrypt(sealed)
+```
+
+Out-of-order delivery is handled for you; a message that arrives late still
+opens.
+
+## Sealed sender
+
+```kotlin
+val envelope = SealedSender.encrypt(address, senderCertificate, content, store)
+val result = SealedSender.decrypt(envelope, trustRoot, timestamp, localAddress, store)
+```
+
+For a fan-out:
+
+```kotlin
+val many = SealedSender.multiRecipientEncrypt(recipients, senderCertificate, content, store)
+val mine = SealedSender.multiRecipientMessageForRecipient(many, serviceId, deviceId)
+```
+
+## Identity, safety numbers and the vault
+
+Identity pairs, fingerprints, usernames and account keys carry the same names
+they do in the other SDKs. See [identity and keys](/docs/concepts/identity),
+[safety numbers](/docs/concepts/safety), [handles](/docs/concepts/handles) and
+[the vault](/docs/concepts/vault).
+
+## Primitives
+
+```kotlin
+val version = abiVersion()
+val bytes = randomBytes(32)
+```
+
+## Threads and lifetimes
+
+The core is synchronous and does no locking of its own. Serialise work per
+session, which on Android usually means doing it inside the same coroutine
+context or transaction your store uses.
+
+Native memory is freed when the wrapper object is closed. Use `use { }` where
+the object is `Closeable`, or close it yourself on the path that created it.
+Don't leave it to the collector.
+
+## Errors
+
+Calls throw `GossveilException` carrying the status the core returned.
+`UntrustedIdentityException`, `NoSessionException`, `DuplicateMessageException`
+and `InvalidMessageException` are worth catching by name. See
+[errors](/docs/guides/errors).

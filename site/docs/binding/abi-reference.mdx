@@ -1,0 +1,103 @@
+---
+title: ABI reference
+description: The version, the buffer contract, the statuses and the wire constants every binding is held to.
+---
+
+This page is the contract between a binding and the library.
+
+## Versioning
+
+```c
+#define GV_ABI_VERSION 1u
+
+uint32_t gv_abi_version(void);
+```
+
+Compare it and refuse on a mismatch. There is no compatibility shim, and
+asking for one is asking to read the wrong bytes at the wrong offsets.
+
+This is the version of the C surface, not of the wire. The two move
+independently; see [one wire, every platform](/docs/guides/wire).
+
+## Buffers
+
+```c
+typedef struct GvBuffer {
+    uint8_t *ptr;
+    size_t len;
+} GvBuffer;
+
+void gv_free(uint8_t *ptr, size_t len);
+uint8_t *gv_alloc(size_t len);
+```
+
+- Inputs are a pointer and a length. `NULL` with zero means absent.
+- Byte outputs are cells the library fills. Free each exactly once with
+  `gv_free`, passing the pointer and length you were given.
+- On any status other than `GV_OK`, every output cell is left empty.
+- `gv_alloc` exists for hosts that cannot pass their own memory, such as wasm.
+  What it returns is freed with `gv_free` like anything else.
+
+## Statuses
+
+```c
+typedef enum GvStatus {
+    GV_OK = 0,
+    GV_BAD_ARGUMENT = 1,
+    GV_BAD_STATE = 2,
+    GV_BAD_KEY = 3,
+    GV_BAD_SIGNATURE = 4,
+    GV_BAD_MESSAGE = 5,
+    GV_UNKNOWN_KEY_ID = 6,
+    GV_UNTRUSTED_IDENTITY = 7,
+    GV_NO_SESSION = 8,
+    GV_REPLAY = 9,
+    GV_LEGACY_VERSION = 10,
+    GV_UNKNOWN_VERSION = 11,
+    GV_OUT_OF_MEMORY = 12,
+    GV_VERIFY_FAILED = 13,
+    GV_INTERNAL = 14
+} GvStatus;
+
+const char *gv_status_text(int32_t status);
+```
+
+What each one means for a caller is in [errors](/docs/guides/errors).
+
+## Message kinds
+
+The first byte a client puts on the wire:
+
+```c
+#define GV_KIND_WHISPER 2u
+#define GV_KIND_FIRST 3u
+#define GV_KIND_CIRCLE 7u
+#define GV_KIND_PLAIN 8u
+```
+
+`GV_KIND_FIRST` is the pre-key message that creates a session on the receiving
+side. `GV_KIND_WHISPER` is every message after. `GV_KIND_CIRCLE` is a group
+message, and `GV_KIND_PLAIN` carries content with no session behind it.
+
+## Post-quantum parameter sets
+
+The tag byte on a serialized post-quantum key:
+
+```c
+#define GV_PQ_ROUND_THREE 0x08u
+#define GV_PQ_STANDARD 0x0Au
+```
+
+If a key names a set your build doesn't know, it's refused. Nothing guesses.
+
+## Threading
+
+The core does no locking. Calls on separate sessions are independent; calls on
+one session must be serialised by the caller. Two encrypts on one session both
+advance the ratchet and one result is lost.
+
+## What does not cross
+
+There are no handles, no callbacks into your code, no global state you have to
+initialise, and no allocator you have to register. A call takes bytes and
+returns bytes.

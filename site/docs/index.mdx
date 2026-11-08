@@ -1,0 +1,63 @@
+---
+title: Introduction
+description: What gossveil is, and where to start depending on what you're building.
+---
+
+gossveil is end-to-end encryption for messaging apps. You get forward-secret
+sessions with a post-quantum handshake, group messaging, sealed envelopes and
+safety numbers, and your app keeps its own storage.
+
+The protocol lives in one Zig core with no runtime dependencies. Over it sits a
+C ABI, and over that three thin packages: Swift, Kotlin and TypeScript. They
+share one operation contract, so the same concept has the same name everywhere
+and a record written on one platform opens on another.
+
+<Tip>
+Straight to an SDK: [Swift](/docs/sdk/swift), [Kotlin](/docs/sdk/kotlin),
+[TypeScript](/docs/sdk/typescript), [C](/docs/sdk/c).
+</Tip>
+
+## Where to start
+
+| If you're | Start here |
+| --- | --- |
+| Adding it to an app | [Add an SDK](/docs/install/sdks), then your language |
+| Writing your first session | [Quickstart](/docs/start/quickstart) |
+| Sending to a group | [Circles](/docs/concepts/circles) |
+| Hiding who sent a message | [Envelopes](/docs/concepts/envelopes) |
+| Deciding where keys live | [Storage is yours](/docs/guides/storage) |
+| Binding another language | [Writing your own SDK](/docs/binding/writing-an-sdk) |
+
+## What the library covers
+
+| Area | What it covers |
+| --- | --- |
+| Sessions | Published key bundles, the handshake, a forward-secret ratchet with skipped-key recovery, session records with archived states, replay rejection |
+| Post-quantum | A post-quantum key in every bundle and a sparse post-quantum ratchet inside every session |
+| Circles | Sender-key distribution, group encrypt and decrypt, out-of-order delivery |
+| Envelopes | Server and sender certificates, envelopes for one recipient and for many |
+| Identity | Curve25519 keys and signatures, identity pairs, alternate-identity proofs |
+| Safety numbers | The iterated fingerprint, its sixty-digit form and its scannable form |
+| Handles | Hashing, zero-knowledge proofs of ownership, links, candidates |
+| The vault | Entropy pool, backup key, backup id, media ids and media keys |
+| Primitives | HKDF, AES-256-GCM-SIV, chunked MACs, random bytes, content framing |
+
+## What it doesn't do
+
+Anything that talks to a particular service. Registration, contact discovery,
+key backup enclaves, key transparency, backup-file validation and credential
+issuance all belong to your app and your backend.
+
+gossveil handles the cryptography and the wire format. Every policy decision
+is yours.
+
+## Three things to know first
+
+1. **You own the storage.** You implement the stores against your own
+   database, in your own language. See [storage is
+   yours](/docs/guides/storage).
+2. **Records are bytes.** Sessions, keys and group state all serialise to
+   bytes you persist and hand back. Nothing holds a connection or a file.
+3. **One wire everywhere.** Key encodings, record layouts and message framing
+   are checked against frozen vectors on every build. See [one wire, every
+   platform](/docs/guides/wire).

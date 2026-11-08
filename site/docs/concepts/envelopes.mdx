@@ -1,0 +1,75 @@
+---
+title: Envelopes
+description: Sealed sender, so the server that carries a message cannot see who sent it.
+---
+
+Encrypting the body still leaves the envelope. Your server has to route the
+message, so it sees who it's for, and ordinarily it sees who it's from as
+well.
+
+A sealed envelope takes the sender out of it. Your server still learns who
+the message is for, because it has to route it, and learns nothing about who
+sent it.
+
+## How it holds up
+
+```swift
+let envelope = try sealedSenderEncrypt(
+    message: content, for: theirAddress, from: senderCertificate,
+    sessionStore: store, identityStore: store, context: NullContext()
+)
+
+let result = try sealedSenderDecrypt(
+    envelope, from: trustRoot, timestamp: now,
+    localIdentity: ourServiceId, localDeviceId: 1,
+    sessionStore: store, identityStore: store,
+    preKeyStore: store, signedPreKeyStore: store, kyberPreKeyStore: store,
+    context: NullContext()
+)
+```
+
+
+The sender presents a certificate issued by your server, proving they're
+entitled to send without identifying themselves per message. The recipient
+checks that certificate against a trust root it already has, so an envelope
+from nowhere is refused.
+
+Certificates expire. The check takes the current time, so a stale certificate fails loudly.
+
+## One recipient, or many
+
+```swift
+let blob = try sealedSenderMultiRecipientEncrypt(
+    message: content, for: recipients, from: senderCertificate,
+    sessionStore: store, identityStore: store, context: NullContext()
+)
+
+let mine = try sealedSenderMultiRecipientMessage(blob, for: serviceId, deviceId: 1)
+```
+
+
+There's a form for a single recipient and a form for a fan-out: one blob the
+server splits per recipient without opening any of it. For a large group, the
+fan-out form is the difference between one upload and hundreds.
+
+A recipient can also extract just their own envelope from a blob, which is
+what a client does when the server hands it the whole thing.
+
+## Content hints
+
+An envelope carries a hint about what's inside: whether it's resendable,
+whether it's something the recipient can ask for again. Your app uses that to
+decide what to do when something fails to open, and the server never learns
+what the hint protects.
+
+## What to check before you trust it
+
+```swift
+try senderCertificate.validate(trustRoot: trustRoot, time: now)
+try serverCertificate.validate(trustRoot: trustRoot)
+```
+
+
+Opening an envelope gives you the sender's identity from inside the sealed
+part. That identity is only as good as the certificate it came with, Check the certificate against your trust root and the current time, and if it
+fails, treat the message as coming from nobody. Don't retry it.

@@ -1,0 +1,63 @@
+---
+title: The vault
+description: Account entropy, and the keys and identifiers derived from it.
+---
+
+The vault is the material an account carries that isn't a session: the root
+entropy, the backup key, and the identifiers and keys derived from them.
+
+## The entropy pool
+
+```swift
+let pool = try AccountEntropyPool.generateRandom()
+```
+
+
+One random pool per account, generated once. Everything else is derived from
+it, which means a user who keeps the pool can rebuild the rest, and a user who
+loses it has lost them.
+
+Treat it the way you'd treat a recovery phrase. gossveil generates and derives;
+where it's stored and how it's shown to a user are your decisions.
+
+## Backup keys and ids
+
+```swift
+let backupKey = try AccountEntropyPool.deriveBackupKey(pool)
+let id = try backupKey.deriveBackupId(aci: aci)
+let ecKey = try backupKey.deriveEcKey(aci: aci)
+let metadataKey = try backupKey.deriveLocalBackupMetadataKey()
+let mediaId = try backupKey.deriveMediaId(mediaName: name)
+let mediaKey = try backupKey.deriveMediaEncryptionKey(mediaId: mediaId)
+```
+
+
+A backup key comes from the pool, and from the backup key come:
+
+- a backup id, which identifies the backup without naming the account,
+- an EC key for signing what the backup contains,
+- a local metadata key, for the part that stays on the device,
+- media ids and media encryption keys, one per attachment.
+
+Each media id gets its own key, so you can hand out one attachment without
+handing out the rest.
+
+## Circle parameters
+
+```swift
+let master = GroupMasterKey(contents: bytes)
+let params = GroupSecretParams.deriveFromMasterKey(master)
+```
+
+
+A circle master key derives the secret parameters for a group, and those
+parameters have a public part your server can hold.
+
+So a circle's identity comes from a key its members share, not from an id the
+server hands out. That matters if you don't want your server able to list
+everybody's groups.
+
+## What is not here
+
+Key backup enclaves, transparency logs and the services that store any of this
+are your application's. gossveil derives the material and hands it to you.

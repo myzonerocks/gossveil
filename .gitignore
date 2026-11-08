@@ -36,6 +36,12 @@
 !/nix/**
 !/sdk/
 !/sdk/**
+!/site/
+!/site/**
+site/node_modules/
+site/dist/
+site/test-results/
+site/playwright-report/
 !/tools/
 !/tools/**
 
