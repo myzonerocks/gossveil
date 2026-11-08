@@ -1,0 +1,289 @@
+---
+title: Swift
+description: "The whole surface on iOS and macOS: stores, sessions, circles, envelopes, safety numbers and the vault."
+---
+
+The Swift package carries a checksummed XCFramework with the device and
+simulator slices, so there's no toolchain to install and no build step.
+
+## Install
+
+```swift
+// Package.swift
+dependencies: [
+    .package(url: "https://github.com/myzonerocks/gossveil", from: "0.1.0-alpha.4"),
+],
+targets: [
+    .target(name: "YourApp", dependencies: [
+        .product(name: "Gossveil", package: "gossveil"),
+    ]),
+]
+```
+
+In Xcode: File, Add Package Dependencies, and paste the repository URL.
+
+## The stores you implement
+
+Everything gossveil persists goes through you. There are six protocols, and
+your app implements them against whatever storage it already has.
+
+```swift
+public protocol IdentityKeyStore {
+    func identityKeyPair(context: StoreContext) throws -> IdentityKeyPair
+    func localRegistrationId(context: StoreContext) throws -> UInt32
+    func saveIdentity(_ identity: IdentityKey, for address: ProtocolAddress, context: StoreContext) throws -> IdentityChange
+    func isTrustedIdentity(_ identity: IdentityKey, for address: ProtocolAddress, direction: Direction, context: StoreContext) throws -> Bool
+    func identity(for address: ProtocolAddress, context: StoreContext) throws -> IdentityKey?
+}
+```
+
+The others follow the same shape: `PreKeyStore`, `SignedPreKeyStore`,
+`KyberPreKeyStore`, `SessionStore` and `SenderKeyStore`. `StoreContext` is
+yours to define; pass `NullContext()` if you don't need one, or your own
+transaction.
+
+`InMemoryProtocolStore` implements all six and is for tests and first runs.
+
+## Identity and keys
+
+```swift
+let identity = IdentityKeyPair.generate()
+let serialized = identity.serialize()
+
+let pair = PrivateKey.generate()
+let publicKey = pair.publicKey
+let signature = pair.generateSignature(message: bytes)
+let ok = publicKey.verifySignature(message: bytes, signature: signature)
+let shared = pair.keyAgreement(with: theirPublicKey)
+
+let kem = KEMKeyPair.generate()
+```
+
+Proving that two identities belong to the same person:
+
+```swift
+let proof = try identity.signAlternateIdentity(other.identityKey)
+let ok = try identity.identityKey.verifyAlternateIdentity(other.identityKey, signature: proof)
+```
+
+## Sessions
+
+Publish a bundle, process it, then write.
+
+```swift
+try processPreKeyBundle(
+    bundle,
+    for: address,
+    sessionStore: store,
+    identityStore: store,
+    context: NullContext()
+)
+
+let sealed = try sessionEncrypt(
+    message: plaintext,
+    for: address,
+    sessionStore: store,
+    identityStore: store,
+    context: NullContext()
+)
+```
+
+The first message a recipient gets is a pre-key message; everything after is a
+whisper message.
+
+```swift
+let first = try sessionDecryptPreKey(
+    preKeyMessage,
+    from: address,
+    sessionStore: store,
+    identityStore: store,
+    preKeyStore: store,
+    signedPreKeyStore: store,
+    kyberPreKeyStore: store,
+    context: NullContext()
+)
+
+let rest = try sessionDecrypt(
+    whisperMessage,
+    from: address,
+    sessionStore: store,
+    identityStore: store,
+    context: NullContext()
+)
+```
+
+Reading and managing a session record:
+
+```swift
+let record = try store.loadSession(for: address, context: NullContext())
+record?.sessionVersion
+record?.remoteRegistrationId
+record?.remoteIdentityKey
+record?.hasCurrentState
+record?.archiveCurrentState()
+record?.currentRatchetKeyMatches(theirKey)
+```
+
+Archive when you want the next message to start a new chain while old
+messages still open.
+
+## Circles
+
+A circle is group messaging by sender key. One member distributes a key, and
+everyone who has processed that distribution can open what they send.
+
+```swift
+let distribution = try SenderKeyDistributionMessage(
+    from: sender, distributionId: id, store: store, context: NullContext()
+)
+
+try processSenderKeyDistributionMessage(
+    distribution, from: sender, store: store, context: NullContext()
+)
+
+let sealed = try groupEncrypt(
+    plaintext, from: sender, distributionId: id, store: store, context: NullContext()
+)
+
+let opened = try groupDecrypt(
+    sealed.serialize(), from: sender, store: store, context: NullContext()
+)
+```
+
+Messages can arrive out of order and still open.
+
+## Envelopes
+
+Sealed sender hides who sent a message from the server carrying it.
+
+```swift
+let envelope = try sealedSenderEncrypt(
+    message: content,
+    for: address,
+    from: senderCertificate,
+    sessionStore: store,
+    identityStore: store,
+    context: NullContext()
+)
+
+let result = try sealedSenderDecrypt(
+    envelope,
+    from: trustRoot,
+    timestamp: now,
+    localIdentity: ourServiceId,
+    localDeviceId: 1,
+    sessionStore: store,
+    identityStore: store,
+    preKeyStore: store,
+    signedPreKeyStore: store,
+    kyberPreKeyStore: store,
+    context: NullContext()
+)
+```
+
+For a fan-out to many recipients in one blob:
+
+```swift
+let many = try sealedSenderMultiRecipientEncrypt(
+    message: content,
+    for: recipients,
+    from: senderCertificate,
+    sessionStore: store,
+    identityStore: store,
+    context: NullContext()
+)
+
+let mine = try sealedSenderMultiRecipientMessage(many, for: serviceId, deviceId: 1)
+```
+
+If you only need the single-recipient view, `sealedSenderMultiRecipientMessageForSingleRecipient`
+gives it without the fan-out machinery.
+
+Certificates are checked, not assumed:
+
+```swift
+try senderCertificate.validate(trustRoot: trustRoot, time: now)
+try serverCertificate.validate(trustRoot: trustRoot)
+```
+
+## Safety numbers
+
+Two people comparing a fingerprint is how they find out nobody is in between.
+
+```swift
+let generator = NumericFingerprintGenerator(iterations: 5200)
+let fingerprint = try generator.create(
+    version: 2,
+    localIdentifier: ourId, localKey: ourIdentityKey,
+    remoteIdentifier: theirId, remoteKey: theirIdentityKey
+)
+
+let digits = try fingerprint.displayable.formatted   // sixty digits to read out
+let scannable = try fingerprint.scannable.serialize() // bytes behind a QR code
+let same = try fingerprint.scannable.compare(againstEncoding: theirs)
+```
+
+## The vault
+
+Account entropy, and everything derived from it.
+
+```swift
+let pool = try AccountEntropyPool.generateRandom()
+let backupKey = try AccountEntropyPool.deriveBackupKey(pool)
+let svrKey = try AccountEntropyPool.deriveSvrKey(pool)
+
+let id = try backupKey.deriveBackupId(aci: aci)
+let ecKey = try backupKey.deriveEcKey(aci: aci)
+let mediaId = try backupKey.deriveMediaId(mediaName: name)
+let mediaKey = try backupKey.deriveMediaEncryptionKey(mediaId: mediaId)
+```
+
+Group parameters for a circle:
+
+```swift
+let master = GroupMasterKey(contents: bytes)
+let params = GroupSecretParams.deriveFromMasterKey(master)
+```
+
+## Handles
+
+A handle is a username that can be proved without revealing it.
+
+```swift
+let hash = try Username.hash(name)
+let proof = try Username.generateProof(name, randomness: random)
+try Username.verifyProof(proof: proof, hash: hash)
+let candidates = try Username.candidates(from: nickname)
+let link = try Username.createLink(name)
+```
+
+## Primitives
+
+```swift
+let key = try hkdf(outputLength: 32, inputKeyMaterial: ikm, salt: salt, info: info)
+let bytes = try randomBytes(32)
+let sealed = try Aes.seal(key: key, nonce: nonce, plaintext: data, associatedData: aad)
+let mac = IncrementalMac(key: key, sizeChoice: .chunksOf(8192))
+```
+
+## Errors
+
+Everything throws `GossveilError`, which carries the status the core returned.
+Handle these by name:
+
+| Case | What it means |
+| --- | --- |
+| `untrustedIdentity` | The identity key for that address changed |
+| `sessionNotFound` | No session for that address yet |
+| `duplicatedMessage` | Already opened; a replay |
+| `invalidMessage` | Not a message this version understands |
+| `invalidKey`, `invalidSignature` | A key or signature did not check out |
+
+See [errors](/docs/guides/errors).
+
+## Concurrency
+
+The core is synchronous and has no internal locking. Serialise access per
+session, which usually means doing session work on one queue or inside the
+same transaction your store uses. Two threads encrypting on one session will
+both advance the ratchet and one of them will lose.

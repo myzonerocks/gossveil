@@ -1,0 +1,81 @@
+---
+title: Storage is yours
+description: You implement the stores. What each one is asked for, and the mistakes that cost you messages.
+---
+
+gossveil never opens a file or a connection. Everything it persists goes
+through store interfaces you implement, against whatever your app already
+uses.
+
+Where keys live is a security decision, and you know your app better than we
+do.
+
+## The stores
+
+```swift
+public protocol SessionStore {
+    func loadSession(for address: ProtocolAddress, context: StoreContext) throws -> SessionRecord?
+    func loadExistingSessions(for addresses: [ProtocolAddress], context: StoreContext) throws -> [SessionRecord]
+    func storeSession(_ record: SessionRecord, for address: ProtocolAddress, context: StoreContext) throws
+}
+```
+
+
+**Identity.** Your own identity key pair and registration id, plus the
+identity you've seen for each address, and the decision about whether an
+identity is trusted. This is the one with real policy in it.
+
+**Pre-keys.** One-time pre-keys by id. Load, store, and remove when used.
+
+**Signed pre-keys.** The longer-lived signed keys, by id.
+
+**Kyber pre-keys.** The post-quantum keys, by id, plus a note that one has
+been used.
+
+**Sessions.** Session records by address, including loading several at once
+for a fan-out.
+
+**Sender keys.** Circle records by sender and distribution id.
+
+## The rules that matter
+
+**Store before you send.** Encrypting advances the ratchet and hands you a new
+record. If you transmit before persisting and then crash, the other side has
+moved on and you cannot catch up. Persist, then send.
+
+**One writer per session.** The core does no locking. Two threads encrypting
+on the same session both advance the ratchet and one result is lost. Serialise
+per session, in a queue or in the transaction your store already has.
+
+**Removing a one-time pre-key is a one-way door.** Once it's used it must not
+come back, or a replay becomes possible. Delete it in the same transaction
+that stores the session.
+
+**Trust is a decision, not a lookup.** `isTrustedIdentity` is where you decide
+what happens when a key changes. Always return true and safety numbers become
+decoration. Always return false and a reinstall locks people out for good.
+Most apps accept on first sight and ask about changes afterwards.
+
+## The context
+
+```swift
+struct DatabaseContext: StoreContext {
+    let transaction: Transaction
+}
+```
+
+
+Every store call takes a context your app defines. Use it to carry the
+transaction, so a session write and a pre-key removal either both happen or
+neither does.
+
+If you don't need one, the SDKs ship a null context.
+
+## Testing
+
+An in-memory store ships with each SDK. It's correct and it's for tests and
+first runs; it forgets everything when the process ends.
+
+Before shipping, test your real store the way it will actually fail: two
+messages arriving at once, a crash between store and send, and a message
+arriving for a session you already archived.

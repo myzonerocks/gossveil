@@ -1,0 +1,118 @@
+---
+title: Writing your own SDK
+description: Everything a new binding has to get right, for a language the three packages do not cover.
+---
+
+The Swift, Kotlin and TypeScript packages are thin. Each one opens the same
+header, calls the same symbols in the same order, and adds nothing the core
+could have done itself.
+
+So a binding for a language nobody has written yet is a known job, not a
+research project. This page covers all of it.
+
+## What you're binding to
+
+One header, `gossveil.h`. It includes nothing beyond `stddef.h` and
+`stdint.h`, so any language with a C foreign function interface can reach it.
+
+Three things cross the boundary: pointers with lengths going in, `GvBuffer`
+cells coming out, and a `GvStatus` on every call. There are no handles to
+track and no callbacks into your allocator.
+
+## Step one: check the version
+
+```c
+if (gv_abi_version() != GV_ABI_VERSION) {
+    /* Refuse. Do not continue and do not degrade. */
+}
+```
+
+A mismatch means the layouts your binding was generated against are not the
+ones the library has. Carrying on reads the wrong bytes.
+
+## Step two: the memory rule
+
+Every byte output is a `GvBuffer` the library filled. Free each one exactly
+once with `gv_free`, passing back the same pointer and length you were given.
+
+```c
+GvBuffer out = {0};
+if (gv_curve_pair(&secret, &out) == GV_OK) {
+    /* use out.ptr, out.len */
+    gv_free(out.ptr, out.len);
+}
+```
+
+Two rules follow, and both are easy to get wrong in a managed language:
+
+- **On a non-zero status every output cell is left empty.** Do not free what
+  you did not receive, and do not read it either.
+- **Your allocator did not make these bytes.** Copy into your language's own
+  memory if you want them to outlive the call, then free the cell.
+
+For hosts that cannot hand the library their own memory, such as wasm,
+`gv_alloc` provides input memory, freed with the same `gv_free`.
+
+## Step three: statuses, not exceptions
+
+Nothing throws across the boundary. Map `GvStatus` onto your language's error
+type and keep the distinctions: an untrusted identity, a missing session and a
+replay need different handling, and collapsing them into one error throws away
+what the caller needed. See [errors](/docs/guides/errors).
+
+`gv_status_text` gives a readable form for logs.
+
+## Step four: records are bytes, and the caller owns them
+
+There is no session object. A record goes in, a new record comes out, and the
+caller persists it.
+
+Your binding should make that hard to get wrong. The order is: call, persist
+the returned record, then send. A binding that returns the ciphertext and the
+new record as one value, which the caller cannot split, makes the dangerous
+order impossible to write.
+
+## Step five: the stores
+
+The core calls nothing. Your binding exposes store interfaces to the host
+application and passes what they return into the calls that need it, in the
+same shapes the three packages use: identity, pre-keys, signed pre-keys,
+post-quantum pre-keys, sessions and sender keys.
+
+Keep the names the other SDKs use. A developer moving between platforms should
+find the same concept under the same word. See [storage is
+yours](/docs/guides/storage).
+
+## Step six: no locking, so say so
+
+The core does no locking. Two calls advancing one session concurrently is a
+lost message, not a crash.
+
+Document it, and if your language makes it cheap, enforce it: a session type
+that can only be used from one task at a time costs nothing and removes the
+whole class of bug.
+
+## Step seven: prove it against the vectors
+
+A binding is finished when it agrees with the others, not when it runs.
+
+Run the conformance vectors through your binding and compare, byte for byte,
+against what the core produces:
+
+```bash
+zig build conformance
+```
+
+Then do the cross-check that catches the rest: encrypt with your binding,
+decrypt with one that ships, and the other way round. A wrong offset, a sign
+error or a truncated buffer survives every test except that one.
+
+## The shape of a good binding
+
+It translates. That's all.
+
+If your binding caches a record, retries a failed call, or decides whether an
+identity is trusted, then an app's behaviour starts depending on which
+language it was written in. That's the thing this whole shape exists to avoid.
+If you find yourself needing something the core doesn't do, that's a gap in
+the core: tell us.

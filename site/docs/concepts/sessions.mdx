@@ -1,0 +1,116 @@
+---
+title: Sessions
+description: Published bundles, the handshake, and a forward-secret ratchet that survives messages arriving out of order.
+---
+
+A session is the state two people share so they can write to each other
+without arranging anything first. One side publishes keys, the other picks
+them up, and from then on every message moves the state forward.
+
+## Publishing a bundle
+
+```swift
+let signed = try SignedPreKeyRecord(
+    id: 1, timestamp: now, privateKey: signedKey, signature: signature
+)
+let oneTime = try PreKeyRecord(id: 7, privateKey: oneTimeKey)
+let pq = try KyberPreKeyRecord(id: 1, timestamp: now, keyPair: kem, signature: pqSignature)
+
+try store.storeSignedPreKey(signed, id: 1, context: NullContext())
+try store.storePreKey(oneTime, id: 7, context: NullContext())
+try store.storeKyberPreKey(pq, id: 1, context: NullContext())
+```
+
+Your server hands the public halves to whoever wants to write to you.
+
+
+Before anyone can write to you, you publish a bundle: your identity key, a
+signed pre-key, an optional one-time pre-key, and a post-quantum pre-key.
+
+The signed pre-key proves the bundle is yours. The one-time pre-key is used
+once and thrown away, and that's what gives the very first message its forward
+secrecy. The post-quantum key is there so somebody recording today cannot open
+the conversation later with a quantum computer.
+
+Your server stores and hands out these bundles. gossveil makes and parses
+them; where they live is your decision.
+
+## The handshake
+
+```swift
+try processPreKeyBundle(
+    theirBundle, for: theirAddress,
+    sessionStore: store, identityStore: store, context: NullContext()
+)
+```
+
+
+The sender processes a bundle and gets a session immediately, before any round
+trip. That's why the first message can carry something real instead of a hello.
+
+The recipient has no session until that first message arrives. It's a
+different kind of message, a pre-key message, carrying what they need to build
+their side.
+
+## The ratchet
+
+```swift
+let sealed = try sessionEncrypt(
+    message: plaintext, for: theirAddress,
+    sessionStore: store, identityStore: store, context: NullContext()
+)
+```
+
+
+Every message advances a chain, and each message uses a key that's thrown away
+after it. Someone who takes your device tomorrow cannot read what you sent
+today.
+
+Messages arrive out of order all the time, so the ratchet keeps the keys it
+skipped and opens a late message when it turns up. There's a limit, though: once a message is far enough behind the window, its
+key is gone.
+
+A replay gets refused. Nothing opens twice.
+
+## Post-quantum, inside the same session
+
+Alongside the classical ratchet there's a sparse post-quantum one. It steps
+less often, because its keys are much larger, and it means a long-lived conversation keeps getting fresh post-quantum material
+instead of leaning on the handshake forever.
+
+You don't turn it on, and there's no second code path to maintain.
+
+## Session records
+
+```swift
+let record = try store.loadSession(for: theirAddress, context: NullContext())
+record?.sessionVersion
+record?.remoteRegistrationId
+record?.hasCurrentState
+record?.archiveCurrentState()
+```
+
+
+A session is bytes. You load the record, pass it in, and store the one that
+comes back.
+
+Store it **before** you send. If you send first and crash, the other side has
+moved on and you haven't.
+
+A record holds the current state plus archived ones, so messages encrypted
+against an older state still open. Archive the current state when you want the next message to start a new chain.
+That's usually after an identity change you've decided to accept.
+
+## When decryption fails
+
+The status says which part failed, and they mean different things:
+
+- The identity key for that address changed. That's a safety number change, and
+  it's your user's call, not something to retry.
+- There's no session for that address yet. The message may have arrived before
+  the handshake.
+- The message was already opened. That's a replay and the right answer is to
+  ignore it.
+- The version is older or newer than this build understands.
+
+See [errors](/docs/guides/errors).

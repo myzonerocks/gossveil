@@ -1,0 +1,52 @@
+---
+title: Handles
+description: Usernames you can prove you own without handing over the name itself.
+---
+
+A handle is a username with a property ordinary usernames don't have: you can
+prove you own it without revealing it to whoever is checking.
+
+## Hashing and proving
+
+```swift
+let hash = try Username.hash(name)
+let proof = try Username.generateProof(name, randomness: random)
+try Username.verifyProof(proof: proof, hash: hash)
+```
+
+
+A name hashes to a value your server can store. When you want to prove
+ownership, you generate a zero-knowledge proof against that hash. The verifier
+learns you own the name behind the hash, and learns nothing about the name.
+
+That means a server can hold a directory of hashes and still not have a list
+of everybody's usernames to leak.
+
+## Candidates
+
+```swift
+let candidates = try Username.candidates(from: "ada")
+```
+
+
+A nickname on its own usually collides. Candidate generation takes a nickname
+and produces the set of full handles with discriminators that your app can try
+against the directory, so the user picks a nickname and the machinery finds
+one that's free.
+
+A handle can also be rebuilt from its parts when you already know the nickname
+and the discriminator.
+
+## Links
+
+```swift
+let link = try Username.createLink(name)
+```
+
+
+A link lets somebody share a handle out of band without putting it in the
+open. The name is sealed with entropy that travels with the link, and opening
+the link gives the name back.
+
+Treat the entropy as the secret it is: anyone holding the whole link holds the
+name.

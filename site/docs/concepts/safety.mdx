@@ -1,0 +1,54 @@
+---
+title: Safety numbers
+description: A fingerprint two people compare to find out nobody is in between.
+---
+
+Encryption protects a conversation from everyone except whoever you're
+actually talking to. A safety number is how two people check that the person
+on the other end is the one they think.
+
+## What it is
+
+```swift
+let generator = NumericFingerprintGenerator(iterations: 5200)
+let fingerprint = try generator.create(
+    version: 2,
+    localIdentifier: ourId, localKey: ourIdentityKey,
+    remoteIdentifier: theirId, remoteKey: theirIdentityKey
+)
+
+let digits = try fingerprint.displayable.formatted
+let scannable = try fingerprint.scannable.serialize()
+```
+
+
+An iterated hash over both identity keys and both identifiers, which gives the
+same number to both sides and a different one to anybody else.
+
+It comes in two forms. A sixty-digit display form people read out or compare
+on screen, and a scannable form that goes behind a QR code so one phone can
+check another.
+
+The hash is iterated thousands of times. Finding a collision costs an attacker
+enormously more than comparing costs the two people doing it.
+
+## When it changes
+
+The number changes when an identity key changes. That happens for ordinary
+reasons, like a reinstall on a new device, and for one bad reason.
+
+Your app can't tell those apart, and neither can gossveil. What it can do is stop and
+say so, instead of carrying on with a key nobody checked. That decision lives
+in your identity store: it gets asked whether an identity is trusted, and the
+answer is yours.
+
+## Comparing
+
+```swift
+let same = try fingerprint.scannable.compare(againstEncoding: theirs)
+```
+
+
+The scannable form compares as bytes, which either match or don't. The display
+form is for humans, and the point of sixty digits is that reading them aloud
+is tedious enough to be done carefully and short enough to be done at all.

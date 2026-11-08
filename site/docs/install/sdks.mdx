@@ -1,0 +1,87 @@
+---
+title: Add an SDK
+description: One coordinate per platform. The compiled core ships inside each package, so there's no build step.
+---
+
+Every release publishes the core as a prebuilt binary inside the package for
+its platform. Adding gossveil takes one dependency line and no Zig.
+
+## Swift
+
+The package resolves a release tag and pulls a checksummed XCFramework with
+the device and simulator slices.
+
+```swift
+// Package.swift
+dependencies: [
+    .package(url: "https://github.com/myzonerocks/gossveil", from: "0.1.0-alpha.4"),
+],
+targets: [
+    .target(name: "YourApp", dependencies: [
+        .product(name: "Gossveil", package: "gossveil"),
+    ]),
+]
+```
+
+In Xcode: File, Add Package Dependencies, and paste the same URL.
+
+## Kotlin
+
+The AAR carries the core for every ABI.
+
+```kotlin
+// build.gradle.kts
+implementation("io.github.avosa:gossveil:0.1.0-alpha.4")
+```
+
+Groovy, if that's what your build uses:
+
+```groovy
+// build.gradle
+implementation 'io.github.avosa:gossveil:0.1.0-alpha.4'
+```
+
+Maven:
+
+```xml
+<dependency>
+  <groupId>io.github.avosa</groupId>
+  <artifactId>gossveil</artifactId>
+  <version>0.1.0-alpha.4</version>
+</dependency>
+```
+
+## TypeScript
+
+**bun**
+
+```bash
+bun add @myzonerocks/gossveil
+```
+
+**npm**
+
+```bash
+npm install @myzonerocks/gossveil
+```
+
+**pnpm**
+
+```bash
+pnpm add @myzonerocks/gossveil
+```
+
+The package carries the wasm beside the wrapper, so a bundler resolves it
+without a plugin.
+
+## C
+
+Every release attaches the static and shared libraries and `gossveil.h`. Link
+the one for your target and include the single header; it needs nothing beyond
+`stddef.h` and `stdint.h`.
+
+<Note>
+Every artifact in a release is built from the same commit by the same pinned
+toolchain, so the wasm, the AAR and the XCFramework all answer the same
+`gv_abi_version()`.
+</Note>

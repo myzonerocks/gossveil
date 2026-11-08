@@ -1,0 +1,62 @@
+---
+title: Circles
+description: Group messaging by sender key, so one encryption reaches everyone and late messages still open.
+---
+
+A circle is a group. Encrypting separately for every member doesn't scale: a
+hundred members means a hundred ciphertexts for every message.
+
+Instead each sender has a key for the circle, distributes it once over the
+existing pairwise sessions, and then encrypts once for everybody.
+
+## Distribution
+
+```swift
+let distribution = try SenderKeyDistributionMessage(
+    from: ourAddress, distributionId: circleId, store: store, context: NullContext()
+)
+
+// On each member's device, once:
+try processSenderKeyDistributionMessage(
+    distribution, from: senderAddress, store: store, context: NullContext()
+)
+```
+
+
+A member creates a distribution message for a circle and sends it to the
+others, using the sessions they already have. Each recipient processes it and
+can now open anything that sender writes to the circle.
+
+Every sender has their own key, so you can still tell who sent what. When
+somebody leaves, the others rotate theirs.
+
+## Sending and receiving
+
+```swift
+let sealed = try groupEncrypt(
+    plaintext, from: ourAddress, distributionId: circleId,
+    store: store, context: NullContext()
+)
+
+let opened = try groupDecrypt(
+    sealed.serialize(), from: senderAddress, store: store, context: NullContext()
+)
+```
+
+
+Once distribution has happened, sending is one call and one ciphertext,
+whatever the size of the circle. Receiving is one call per message.
+
+Messages can arrive out of order and still open, which matters more in a group
+than in a conversation: members are on different networks and the server
+fans out in whatever order it manages.
+
+## What gossveil does not decide
+
+Who is in the circle, who may add or remove members, and what happens when
+somebody leaves are all your application's rules. gossveil does the cryptography for a set of senders. Who's in that set is up
+to your server and your app.
+
+The group parameters in [the vault](/docs/concepts/vault) are there if you want
+a circle's identity to come from a master key its members share, not from an id
+your server hands out.

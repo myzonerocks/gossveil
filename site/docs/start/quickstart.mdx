@@ -1,0 +1,101 @@
+---
+title: Quickstart
+description: Two people, one session, one message that decrypts, in about ten minutes.
+---
+
+This gets a real session running end to end. Everything else assumes you've
+done it.
+
+The examples are Swift; the same four steps have the same names in
+[Kotlin](/docs/sdk/kotlin) and [TypeScript](/docs/sdk/typescript).
+
+## 1. Add the SDK
+
+One line for your package manager. See [adding an SDK](/docs/install/sdks).
+
+## 2. Make an identity and some stores
+
+Each party needs an identity key pair, a registration id, and somewhere to keep
+state. For a first run, the in-memory store that ships with the SDK is enough.
+
+```swift
+import Gossveil
+
+let store = InMemoryProtocolStore(identity: IdentityKeyPair.generate(), registrationId: 1)
+```
+
+<Warning>
+`InMemoryProtocolStore` forgets everything when the process ends. It's for
+tests and first runs. Before you ship, implement the stores against your own
+database; see [storage is yours](/docs/guides/storage).
+</Warning>
+
+## 3. Publish a bundle, and process it
+
+The person being written to publishes a bundle: their identity key, a signed
+pre-key, an optional one-time pre-key and a post-quantum pre-key. The sender
+processes that bundle, which creates the session.
+
+```swift
+try processPreKeyBundle(
+    bundle,
+    for: theirAddress,
+    sessionStore: store,
+    identityStore: store,
+    context: NullContext()
+)
+```
+
+After this call the sender has a session and can write immediately. The
+recipient doesn't have one yet; theirs is created when the first message
+arrives.
+
+## 4. Encrypt and decrypt
+
+```swift
+let sealed = try sessionEncrypt(
+    message: Array("see you at six".utf8),
+    for: theirAddress,
+    sessionStore: store,
+    identityStore: store,
+    context: NullContext()
+)
+```
+
+On the other side, the first message is a pre-key message, so it goes through
+the pre-key path once:
+
+```swift
+let opened = try sessionDecryptPreKey(
+    PreKeyMessage(bytes: sealed.serialize()),
+    from: ourAddress,
+    sessionStore: theirStore,
+    identityStore: theirStore,
+    preKeyStore: theirStore,
+    signedPreKeyStore: theirStore,
+    kyberPreKeyStore: theirStore,
+    context: NullContext()
+)
+```
+
+Every message after that is a whisper message and goes through
+`sessionDecrypt`.
+
+## What you should see
+
+The plaintext back, and both stores holding a session record that has moved on
+by one step. Encrypt again and the ciphertext is different, because the ratchet
+advanced.
+
+If decryption fails, the status tells you which part did:
+`GV_UNTRUSTED_IDENTITY` means the identity key changed,
+`GV_NO_SESSION` means there's no session for that address,
+`GV_REPLAY` means that message was already opened. See
+[errors](/docs/guides/errors).
+
+## Next
+
+- [Sessions](/docs/concepts/sessions) for what just happened.
+- [Storage is yours](/docs/guides/storage) before you ship any of it.
+- [Circles](/docs/concepts/circles) to send to a group.
+- [Envelopes](/docs/concepts/envelopes) to hide the sender from your server.

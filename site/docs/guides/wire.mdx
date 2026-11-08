@@ -1,0 +1,48 @@
+---
+title: One wire, every platform
+description: Why a session started on a phone carries on in a browser, and how that is held.
+---
+
+Key encodings, record layouts, message framing and key schedules are the same
+on every platform, because there's only one implementation of them.
+
+That's not a convention the SDKs agree to follow. There's one core, and the
+packages are translation layers over it.
+
+## How it is held
+
+Frozen wire vectors, recorded by this project's own tooling, are replayed on
+every build. If a change alters an encoding, the conformance step fails and it never ships,
+so nobody's existing sessions break.
+
+```bash
+zig build conformance
+```
+
+## What this buys you
+
+A session record written by the Swift package opens in the TypeScript one. A
+message encrypted on Android decrypts in a browser. A user moving between
+their phone and the web keeps their conversations, because nothing about the
+cryptography or the bytes changed on the way.
+
+It also means your server doesn't need to know which client sent what. The
+bytes are the bytes.
+
+## Versions on the wire
+
+A message carries a version. Older than this build understands gives `GV_LEGACY_VERSION`, newer gives
+`GV_UNKNOWN_VERSION`. Both are answers you can act on, and neither crashes.
+
+Keep them distinct in your UI: one means the other end should update, the
+other means this end should.
+
+## The ABI version
+
+`gv_abi_version` reports the version of the C surface. A binding compares it
+and refuses a library it was not built against; see [the ABI
+reference](/docs/binding/abi-reference).
+
+That's a different thing from the wire version, and the two move
+independently. The ABI is between your binding and the library. The wire is
+between two people's devices.

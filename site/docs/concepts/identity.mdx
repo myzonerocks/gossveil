@@ -1,0 +1,67 @@
+---
+title: Identity and keys
+description: Curve25519 pairs, post-quantum pairs, and proving two identities are the same person.
+---
+
+Everything starts from an identity key pair. It's long-lived, it's the thing a
+[safety number](/docs/concepts/safety) is computed over, and it signs the
+pre-keys you publish.
+
+## Classical keys
+
+```swift
+let identity = IdentityKeyPair.generate()
+let pair = PrivateKey.generate()
+
+let signature = pair.generateSignature(message: bytes)
+let ok = pair.publicKey.verifySignature(message: bytes, signature: signature)
+let shared = pair.keyAgreement(with: theirPublicKey)
+```
+
+
+Curve25519, used for signatures and for agreement. A private key signs, the
+matching public key verifies, and two parties derive a shared secret from
+their own private key and the other's public key.
+
+Public keys get checked, not trusted. A malformed or small-order key is
+refused.
+
+## Post-quantum keys
+
+```swift
+let kem = KEMKeyPair.generate()
+```
+
+
+A key encapsulation pair sits beside the classical one. The sender
+encapsulates to the recipient's public key and gets a ciphertext and a shared
+secret; the recipient opens the ciphertext with their secret key and gets the
+same shared secret.
+
+Serialized post-quantum keys carry a tag byte naming their parameter set, so a
+key from an older set is recognised for what it is.
+
+## Published records
+
+What you publish is not a bare key, it's a record: an id, the key, and for the
+signed and post-quantum ones a signature from your identity key. The id is how
+a sender tells you which key they used, so you can find the private half.
+
+One-time keys are used once and removed. Signed and post-quantum keys are
+rotated on your schedule, and old ones stay available until the messages that
+used them have arrived.
+
+## Alternate identities
+
+```swift
+let proof = try identity.signAlternateIdentity(other.identityKey)
+let ok = try identity.identityKey.verifyAlternateIdentity(other.identityKey, signature: proof)
+```
+
+
+Sometimes one person has two identities, for example an account identifier and
+a phone-number identifier. One can vouch for the other with a signature, and
+anybody can check that proof.
+
+That's how an app says "these two are the same person" without a server being
+believed on the point.

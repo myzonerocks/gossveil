@@ -1,0 +1,233 @@
+---
+title: C
+description: "The ABI itself: one header, buffers you free once, and a status on every call."
+---
+
+The three packages are wrappers over this. Include the header, link the
+library, and you have everything they have.
+
+## The shape of every call
+
+- Inputs are a pointer and a length. `NULL` with zero means absent.
+- Byte outputs are `GvBuffer` cells the library fills. Free each one once with
+  `gv_free`.
+- Every call returns a `GvStatus`. Zero is success, and on any other status
+  every output cell is left empty.
+- Records go in and out as bytes. There are no handles to keep.
+
+```c
+#include <gossveil.h>
+
+typedef struct GvBuffer {
+    uint8_t *ptr;
+    size_t len;
+} GvBuffer;
+```
+
+## Starting up
+
+```c
+if (gv_abi_version() != GV_ABI_VERSION) return 1;
+```
+
+For a host that cannot hand the library its own memory, such as wasm:
+
+```c
+uint8_t *input = gv_alloc(len);
+gv_free(input, len);
+```
+
+## Keys
+
+```c
+GvBuffer secret = {0}, public_key = {0};
+if (gv_curve_pair(&secret, &public_key) != GV_OK) return 1;
+
+gv_curve_public(secret.ptr, secret.len, &public_key);
+gv_curve_sign(secret.ptr, secret.len, message, message_len, &signature);
+gv_curve_verify(public_key.ptr, public_key.len, message, message_len, sig, sig_len);
+gv_curve_agree(secret.ptr, secret.len, theirs, theirs_len, &shared);
+gv_curve_check(public_key.ptr, public_key.len);
+
+gv_pq_pair(&pq_secret, &pq_public);
+gv_pq_encapsulate(pq_public.ptr, pq_public.len, &ciphertext, &shared);
+gv_pq_open(pq_secret.ptr, pq_secret.len, ciphertext, ciphertext_len, &shared);
+
+gv_identity_pair(&identity);
+gv_identity_serialize(identity.ptr, identity.len, &bytes);
+gv_identity_parse(bytes, bytes_len, &identity);
+gv_identity_vouch(ours, ours_len, theirs, theirs_len, &proof);
+gv_identity_vouched(ours, ours_len, theirs, theirs_len, proof, proof_len);
+
+gv_free(secret.ptr, secret.len);
+```
+
+## Published records
+
+```c
+gv_one_time_record(id, secret, secret_len, &record);
+gv_one_time_parse(record, record_len, &info);
+gv_signed_record(id, secret, secret_len, signature, signature_len, &record);
+gv_signed_parse(record, record_len, &info);
+gv_pq_record(id, secret, secret_len, signature, signature_len, &record);
+gv_pq_record_parse(record, record_len, &info);
+```
+
+## Sessions
+
+```c
+gv_session_start(/* our identity, their bundle, the existing record */ ..., &record);
+gv_session_seal(record, record_len, plaintext, plaintext_len, &sealed, &next_record);
+gv_session_open(record, record_len, message, message_len, &plaintext, &next_record);
+gv_session_open_first(record, record_len, message, message_len, ..., &plaintext, &next_record);
+
+gv_session_info(record, record_len, &info);
+gv_session_shelve(record, record_len, &next_record);
+gv_session_ratchet_is(record, record_len, key, key_len);
+
+gv_opener_parse(message, message_len, &parts);
+gv_whisper_parse(message, message_len, &parts);
+```
+
+A session record goes in and a new one comes out. Persist the one that comes
+out before you send anything, or a crash loses a ratchet step.
+
+## Circles
+
+```c
+gv_circle_announce(sender, sender_len, distribution_id, record, record_len, &announcement);
+gv_circle_admit(announcement, announcement_len, record, record_len, &next_record);
+gv_announce_parse(announcement, announcement_len, &parts);
+gv_circle_seal(record, record_len, plaintext, plaintext_len, &sealed, &next_record);
+gv_circle_open(record, record_len, message, message_len, &plaintext, &next_record);
+gv_note_parse(message, message_len, &parts);
+```
+
+## Envelopes
+
+```c
+gv_server_cert(key_id, key, key_len, signer, signer_len, &cert);
+gv_server_cert_parse(cert, cert_len, &info);
+gv_server_cert_check(cert, cert_len, trust_root, trust_root_len);
+
+gv_sender_cert(/* ... */, &cert);
+gv_sender_cert_parse(cert, cert_len, &info);
+gv_sender_cert_check(cert, cert_len, trust_root, trust_root_len, now);
+
+gv_content(hint, body, body_len, &content);
+gv_content_parse(content, content_len, &parts);
+
+gv_envelope_seal(/* ... */, &envelope);
+gv_envelope_open(/* ... */, &content);
+gv_envelope_seal_many(/* ... */, &blob);
+gv_envelope_for_single(blob, blob_len, &envelope);
+gv_envelope_for_recipient(blob, blob_len, service_id, service_id_len, device, &envelope);
+```
+
+## Safety numbers
+
+```c
+gv_safety(iterations, ours, ours_len, ours_id, ours_id_len,
+          theirs, theirs_len, theirs_id, theirs_id_len, &displayable, &scannable);
+gv_safety_matches(ours, ours_len, theirs, theirs_len);
+```
+
+## Handles
+
+```c
+gv_handle_hash(name, name_len, &hash);
+gv_handle_proof(name, name_len, randomness, randomness_len, &proof);
+gv_handle_verify(proof, proof_len, hash, hash_len);
+gv_handle_candidates(nickname, nickname_len, &candidates);
+gv_handle_from_parts(nickname, nickname_len, discriminator, &handle);
+gv_handle_link(name, name_len, entropy, entropy_len, &link);
+gv_handle_link_open(link, link_len, entropy, entropy_len, &name);
+```
+
+## The vault
+
+```c
+gv_pool_random(&pool);
+gv_pool_derive(pool, pool_len, &key);
+gv_backup_key_random(&key);
+gv_backup_key_for_account(pool, pool_len, &key);
+gv_backup_key_local_metadata(key, key_len, &metadata_key);
+gv_backup_key_media(key, key_len, name, name_len, &media_id);
+gv_backup_key_media_keys(key, key_len, media_id, media_id_len, &keys);
+
+gv_circle_master_random(&master);
+gv_circle_secret_params(master, master_len, &params);
+gv_circle_params_info(params, params_len, &info);
+```
+
+## Primitives
+
+```c
+gv_hkdf(length, ikm, ikm_len, salt, salt_len, info, info_len, &key);
+gv_siv_seal(key, key_len, nonce, nonce_len, plaintext, plaintext_len, aad, aad_len, &sealed);
+gv_siv_open(key, key_len, nonce, nonce_len, sealed, sealed_len, aad, aad_len, &plaintext);
+gv_random(length, &bytes);
+gv_chunk_tags(key, key_len, chunk, data, data_len, &tags);
+gv_chunk_check(key, key_len, chunk, data, data_len, tags, tags_len);
+
+gv_report(/* ... */, &report);
+gv_report_parse(report, report_len, &parts);
+gv_report_in_body(body, body_len, &report);
+gv_plain_from_report(report, report_len, &plain);
+gv_plain_body(plain, plain_len, &body);
+```
+
+## Statuses
+
+```c
+typedef enum GvStatus {
+    GV_OK = 0,
+    GV_BAD_ARGUMENT = 1,
+    GV_BAD_STATE = 2,
+    GV_BAD_KEY = 3,
+    GV_BAD_SIGNATURE = 4,
+    GV_BAD_MESSAGE = 5,
+    GV_UNKNOWN_KEY_ID = 6,
+    GV_UNTRUSTED_IDENTITY = 7,
+    GV_NO_SESSION = 8,
+    GV_REPLAY = 9,
+    GV_LEGACY_VERSION = 10,
+    GV_UNKNOWN_VERSION = 11,
+    GV_OUT_OF_MEMORY = 12,
+    GV_VERIFY_FAILED = 13,
+    GV_INTERNAL = 14
+} GvStatus;
+```
+
+A human-readable form, for logs:
+
+```c
+const char *text = gv_status_text(status);
+```
+
+## Message kinds
+
+The first byte a client puts on the wire:
+
+```c
+#define GV_KIND_WHISPER 2u
+#define GV_KIND_FIRST 3u
+#define GV_KIND_CIRCLE 7u
+#define GV_KIND_PLAIN 8u
+```
+
+Post-quantum parameter sets, as the tag byte on a serialized key:
+
+```c
+#define GV_PQ_ROUND_THREE 0x08u
+#define GV_PQ_STANDARD 0x0Au
+```
+
+## Freeing
+
+Free every `GvBuffer` exactly once with `gv_free`, passing the same pointer and
+length the library gave you. Anything your own allocator made is yours to
+free the usual way.
+
+See [writing your own SDK](/docs/binding/writing-an-sdk) if you're wrapping
+this for another language.

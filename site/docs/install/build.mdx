@@ -1,0 +1,58 @@
+---
+title: Build from source
+description: One pinned compiler, one command per target.
+---
+
+The core builds with one pinned Zig release. The pin lives in `.zigversion`, and `build.zig` refuses any other compiler, because a
+binary nobody can reproduce is worse than no binary.
+
+Run the full local gate, which is the test suite, the ABI check and the
+conformance vectors:
+
+```bash
+zig build ci
+```
+
+## Per target
+
+The C libraries and the header:
+
+```bash
+zig build c
+```
+
+The Android slices:
+
+```bash
+zig build android
+```
+
+The Apple XCFramework:
+
+```bash
+zig build apple
+```
+
+The wasm build the web package carries:
+
+```bash
+zig build wasm
+```
+
+The JNI layer Kotlin binds to:
+
+```bash
+zig build jni
+```
+
+## Gates
+
+`zig build ci` is the bar a change has to clear. The conformance step replays
+frozen wire vectors, so a change that alters an encoding fails here rather
+than in somebody's app:
+
+```bash
+zig build conformance
+```
+
+If it goes red, find out why. Don't just run it again.
