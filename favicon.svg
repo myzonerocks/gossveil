@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none">
+  <style>
+    .edge { stroke: #1d1b26; }
+    .inner { stroke: #ffffff; }
+    @media (prefers-color-scheme: dark) {
+      .edge { stroke: #e8e7ef; }
+      .inner { stroke: #0b0d12; }
+    }
+  </style>
+  <path class="edge" d="M16 2.2 4.8 6.2v9.3c0 6.9 4.5 12.2 11.2 14.8 6.7-2.6 11.2-7.9 11.2-14.8V6.2Z" stroke-width="2.4" stroke-linejoin="round"/>
+  <path d="M16 9.7 21.5 12.8v6.2L16 22.1l-5.5-3.1v-6.2Z" fill="#0f9d8f"/>
+  <path class="inner" d="M16 15.9 21.5 12.8M16 15.9v6.2M16 15.9 10.5 12.8" stroke-width="1.6"/>
+</svg>

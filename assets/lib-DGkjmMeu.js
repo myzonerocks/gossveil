@@ -1,0 +1,2 @@
+import{C as e,O as t,d as n,y as r}from"./index-Ce7kJgHE.js";var i={name:`MDXProvider`,props:{components:{default(){return{}},type:Object}},setup(e){t(`$mdxComponents`,e.components)},render(){return r(n,void 0,this.$slots.default?this.$slots.default():[])}};function a(){return e(`$mdxComponents`,{})}export{a as n,i as t};
+//# sourceMappingURL=lib-DGkjmMeu.js.map

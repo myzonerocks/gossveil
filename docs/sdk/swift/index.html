@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <link rel="icon" type="image/svg+xml" href="/gossveil/favicon.svg?v=2" />
+    <link rel="apple-touch-icon" href="/gossveil/mark.svg" />
+    <title>gossveil</title>
+    <meta name="description" content="End-to-end encryption for messaging apps: forward-secret sessions with a post-quantum handshake, groups, sealed envelopes and safety numbers, on iOS, Android and the web from one core." />
+    <meta name="theme-color" content="#0a0f10" />
+    <meta property="og:title" content="gossveil" />
+    <meta property="og:description" content="Forward-secret sessions with a post-quantum handshake, groups and sealed envelopes. One core, three packages." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/gossveil/mark.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <!-- Reads the saved theme before the first paint, so nobody sees the wrong one flash. -->
+    <script>
+      try {
+        var saved = localStorage.getItem('gossveil:theme')
+        if (saved === 'light' || saved === 'dark') {
+          document.documentElement.setAttribute('data-theme', saved)
+        }
+      } catch (error) {}
+    </script>
+    <script type="module" crossorigin src="/gossveil/assets/index-Ce7kJgHE.js"></script>
+    <link rel="stylesheet" crossorigin href="/gossveil/assets/index-LHZg4B1s.css">
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>
